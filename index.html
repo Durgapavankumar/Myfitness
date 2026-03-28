@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0f1a">
+<title>Durga · Performance Tracker</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0f1a;--bg2:#111827;--bg3:#1a2332;--bg4:#243044;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8edf5;--muted:#6b7a94;--dim:#2d3a50;
+  --accent:#38bdf8;--accent2:#0ea5e9;
+  --green:#22c55e;--green2:#16a34a;
+  --red:#ef4444;--red2:#dc2626;
+  --amber:#f59e0b;--amber2:#d97706;
+  --purple:#a855f7;--gold:#f0c040;
+  --whoop:#00ff88;
+  --r:12px;--r2:8px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+  --mono:'SF Mono','Fira Code','Courier New',monospace;
+}
+html{height:100%;background:var(--bg)}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:80px;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ── TYPOGRAPHY ── */
+h1{font-size:1.5rem;font-weight:700;letter-spacing:-.02em}
+h2{font-size:1.15rem;font-weight:600}
+h3{font-size:.95rem;font-weight:600}
+p{font-size:.88rem;color:var(--muted);line-height:1.65}
+
+/* ── LAYOUT ── */
+.page{display:none;padding:16px;animation:fi .2s ease}
+.page.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.row{display:flex;gap:10px;align-items:center}
+.row.sb{justify-content:space-between}
+.col{display:flex;flex-direction:column;gap:10px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mt4{margin-top:4px}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.card.sm{padding:12px}
+.card.al{border-left:3px solid var(--accent);border-radius:0 var(--r) var(--r) 0}
+.card.gl{border-left:3px solid var(--green);border-radius:0 var(--r) var(--r) 0}
+.card.rl{border-left:3px solid var(--red);border-radius:0 var(--r) var(--r) 0}
+.card.ol{border-left:3px solid var(--amber);border-radius:0 var(--r) var(--r) 0}
+.card.gol{border-left:3px solid var(--gold);border-radius:0 var(--r) var(--r) 0}
+.stitle{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+
+/* ── INPUTS ── */
+input,select,textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);color:var(--text);font-family:var(--font);font-size:15px;padding:12px 14px;width:100%;outline:none;-webkit-appearance:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input[type=number]{font-family:var(--mono);font-size:1.05rem;text-align:center}
+textarea{resize:vertical;min-height:64px}
+label{font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-radius:var(--r2);border:none;cursor:pointer;font-family:var(--font);font-size:.88rem;font-weight:600;transition:all .15s;letter-spacing:.01em}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--accent2);color:#fff}
+.btn-s{background:var(--green2);color:#fff}
+.btn-d{background:var(--red2);color:#fff}
+.btn-g{background:var(--bg3);border:1px solid var(--border2);color:var(--text)}
+.btn-sm{padding:8px 14px;font-size:.78rem}
+.btn-xs{padding:5px 10px;font-size:.72rem;border-radius:6px}
+.btn-blk{width:100%;justify-content:center}
+.btn-amber{background:var(--amber2);color:#fff}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:600;letter-spacing:.04em}
+.bg{background:rgba(34,197,94,.1);color:var(--green)}
+.ba{background:rgba(245,158,11,.1);color:var(--amber)}
+.br{background:rgba(239,68,68,.1);color:var(--red)}
+.bb{background:rgba(56,189,248,.1);color:var(--accent)}
+.bp{background:rgba(168,85,247,.1);color:var(--purple)}
+.bgo{background:rgba(240,192,64,.1);color:var(--gold)}
+
+/* ── STAT ── */
+.stat{background:var(--bg3);border-radius:var(--r2);padding:12px;text-align:center}
+.sv{font-family:var(--mono);font-size:1.5rem;font-weight:700;line-height:1}
+.sv.g{color:var(--green)}.sv.r{color:var(--red)}.sv.a{color:var(--amber)}.sv.b{color:var(--accent)}.sv.go{color:var(--gold)}
+.sl{font-size:.65rem;color:var(--muted);margin-top:3px;font-weight:500;letter-spacing:.05em;text-transform:uppercase}
+
+/* ── PROGRESS ── */
+.pb{height:6px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.pf{height:100%;border-radius:4px;transition:width .4s}
+.pf-g{background:var(--green)}.pf-b{background:var(--accent)}.pf-a{background:var(--amber)}.pf-r{background:var(--red)}
+
+/* ── TOGGLE ── */
+.tog-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.tog-row:last-child{border-bottom:none}
+.tl{font-size:.9rem;font-weight:500}
+.ts{font-size:.72rem;color:var(--muted);margin-top:1px}
+.tog{width:44px;height:26px;background:var(--dim);border-radius:13px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--green2)}
+.tog::after{content:'';width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:transform .2s}
+.tog.on::after{transform:translateX(18px)}
+
+/* ── SCORE BTNS ── */
+.sgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:6px}
+.sb-s{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:8px 2px;font-size:.78rem;font-weight:700;cursor:pointer;text-align:center;color:var(--muted);transition:all .15s}
+.s1,.s2{--sc:var(--red)}.s3,.s4{--sc:var(--amber)}.s5,.s6{--sc:#fbbf24}.s7,.s8{--sc:var(--green)}.s9,.s10{--sc:#00ff88}
+.sb-s.act{background:color-mix(in srgb,var(--sc) 15%,transparent);color:var(--sc);border-color:var(--sc)}
+
+/* ── BOTTOM NAV ── */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg2);border-top:1px solid var(--border2);display:grid;grid-template-columns:repeat(6,1fr);padding:6px 0 max(6px,env(safe-area-inset-bottom));z-index:100}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;color:var(--muted);font-size:.58rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border:none;background:none;transition:color .15s}
+.ni.on{color:var(--accent)}
+.ni svg{width:21px;height:21px}
+
+/* ── PAGE HEADER ── */
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-top:8px}
+.ph h1{font-size:1.35rem}
+
+/* ── ALERTS ── */
+.alert{padding:10px 14px;border-radius:var(--r2);font-size:.83rem;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+.ag{background:rgba(34,197,94,.08);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.aa{background:rgba(245,158,11,.08);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.ar{background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.ab{background:rgba(56,189,248,.08);color:var(--accent);border:1px solid rgba(56,189,248,.2)}
+
+/* ── SET LOGGER ── */
+.set-row{display:grid;grid-template-columns:28px 1fr 1fr 1fr 36px;gap:5px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+.set-row:last-child{border-bottom:none}
+.sn{font-family:var(--mono);font-size:.75rem;color:var(--muted);text-align:center}
+.si{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 4px;font-family:var(--mono);font-size:.9rem;text-align:center;color:var(--text);width:100%}
+.si:focus{border-color:var(--accent);outline:none}
+.sdel{background:none;border:none;cursor:pointer;color:var(--red);font-size:1rem;padding:4px;border-radius:4px}
+.sh{display:grid;grid-template-columns:28px 1fr 1fr 1fr 36px;gap:5px;margin-bottom:4px}
+.sh span{font-size:.62rem;color:var(--muted);text-align:center;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── EX BLOCK ── */
+.exb{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:8px}
+.exh{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer}
+.exh h4{font-size:.88rem;font-weight:600;color:var(--text);margin:0}
+.exbod{padding:0 14px 12px;display:none}
+.exbod.open{display:block}
+.exmeta{font-size:.72rem;color:var(--muted);margin-bottom:8px}
+
+/* ── MEAL ── */
+.meal{background:var(--bg3);border-radius:var(--r2);padding:12px;margin-bottom:8px;border:1px solid var(--border)}
+.meal.logged{border-color:var(--green2)}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.mt_{font-size:.88rem;font-weight:600}
+.mtime{font-size:.7rem;color:var(--muted)}
+.mpills{display:flex;gap:6px;flex-wrap:wrap}
+.mp{font-size:.7rem;font-family:var(--mono);background:var(--bg4);padding:2px 7px;border-radius:20px}
+.mp.pro{border:1px solid rgba(34,197,94,.3);color:var(--green)}
+.mp.carb{border:1px solid rgba(56,189,248,.3);color:var(--accent)}
+.mp.fat{border:1px solid rgba(245,158,11,.3);color:var(--amber)}
+
+/* ── TABS ── */
+.tpills{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.tpills::-webkit-scrollbar{display:none}
+.tp{padding:7px 16px;border-radius:20px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;background:var(--bg3);color:var(--muted);border:1px solid var(--border);transition:all .15s;flex-shrink:0}
+.tp.on{background:var(--accent2);color:#fff;border-color:transparent}
+
+/* ── CHARTS ── */
+.bars{display:flex;align-items:flex-end;gap:3px;height:80px}
+.bar{flex:1;background:var(--accent2);border-radius:3px 3px 0 0;min-height:4px;transition:height .3s}
+.blabs{display:flex;gap:3px;margin-top:3px}
+.blabs span{flex:1;font-size:.52rem;color:var(--muted);text-align:center;overflow:hidden}
+
+/* ── GUIDE ── */
+.gblock{background:var(--bg3);border-radius:var(--r2);padding:14px;margin-bottom:8px;border-left:3px solid var(--accent)}
+.gblock h4{font-size:.88rem;font-weight:600;margin-bottom:4px}
+.gblock p{font-size:.8rem;color:var(--muted);line-height:1.6}
+.gblock ul{list-style:none;margin-top:6px}
+.gblock ul li{font-size:.8rem;color:var(--muted);padding:2px 0 2px 14px;position:relative;line-height:1.5}
+.gblock ul li::before{content:'›';position:absolute;left:0;color:var(--accent)}
+
+/* ── MODAL ── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end;justify-content:center;display:none}
+.ov.open{display:flex}
+.mod{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px;max-height:88vh;overflow-y:auto;padding-bottom:max(20px,env(safe-area-inset-bottom))}
+.mhand{width:40px;height:4px;background:var(--dim);border-radius:2px;margin:0 auto 16px}
+.mtitle{font-size:1.1rem;font-weight:700;margin-bottom:16px}
+.mclose{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;float:right}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg4);color:var(--text);padding:10px 20px;border-radius:20px;font-size:.83rem;font-weight:500;z-index:300;opacity:0;transition:all .25s;border:1px solid var(--border2);white-space:nowrap;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── PIN SCREEN ── */
+#pin-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px}
+#pin-screen.hidden{display:none}
+.pin-logo{font-size:3rem;margin-bottom:8px}
+.pin-title{font-size:1.4rem;font-weight:700;margin-bottom:4px;text-align:center}
+.pin-sub{font-size:.85rem;color:var(--muted);margin-bottom:32px;text-align:center}
+.pin-dots{display:flex;gap:14px;margin-bottom:32px}
+.pin-dot{width:16px;height:16px;border-radius:50%;background:var(--dim);transition:background .15s}
+.pin-dot.filled{background:var(--accent)}
+.pin-dot.error{background:var(--red)}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:240px}
+.pk{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:18px;font-size:1.3rem;font-weight:600;cursor:pointer;text-align:center;color:var(--text);transition:all .15s;border:none;font-family:var(--mono)}
+.pk:active{background:var(--bg4);transform:scale(.94)}
+.pk.del{font-size:1rem;color:var(--muted)}
+.pk.empty{background:transparent;border:none;cursor:default}
+.pin-error{font-size:.82rem;color:var(--red);margin-top:16px;text-align:center;min-height:20px}
+.pin-setup-label{font-size:.82rem;color:var(--muted);margin-bottom:12px;text-align:center}
+
+/* ── SYNC STATUS ── */
+#sync-bar{display:flex;align-items:center;gap:6px;padding:6px 16px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:.72rem;color:var(--muted);position:sticky;top:0;z-index:50}
+.sync-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sync-ok{background:var(--green)}.sync-pending{background:var(--amber)}.sync-err{background:var(--red)}.sync-off{background:var(--dim)}
+
+/* ── STREAK ── */
+.str-row{display:flex;gap:4px;margin-top:8px}
+.sd{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0}
+.sd-d{background:var(--green2);color:#fff}.sd-t{background:var(--accent2);color:#fff;box-shadow:0 0 8px rgba(14,165,233,.5)}.sd-s{background:var(--bg3);color:var(--muted)}.sd-f{background:var(--bg3);color:var(--dim)}
+
+/* ── DIVIDER ── */
+.div{height:1px;background:var(--border);margin:16px 0}
+.text-c{text-align:center}.text-r{text-align:right}
+.text-sm{font-size:.82rem}.text-xs{font-size:.72rem}.text-m{color:var(--muted)}
+.text-g{color:var(--green)}.text-r_{color:var(--red)}.text-a{color:var(--amber)}.text-b{color:var(--accent)}.text-go{color:var(--gold)}
+.fw6{font-weight:600}.mono{font-family:var(--mono)}
+
+/* ── TABLE ── */
+.scx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.dt{width:100%;border-collapse:collapse;min-width:360px}
+table.dt th{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border2);text-align:left;background:var(--bg3);white-space:nowrap}
+table.dt td{font-size:.8rem;padding:8px 8px;border-bottom:1px solid var(--border);color:var(--text)}
+table.dt tr:last-child td{border-bottom:none}
+table.dt tr:hover td{background:rgba(255,255,255,.015)}
+
+/* ── SETTINGS SHEET SETUP ── */
+.setup-step{background:var(--bg3);border-radius:var(--r2);padding:14px;margin-bottom:10px;border-left:3px solid var(--accent)}
+.setup-step .step-num{font-family:var(--mono);font-size:.72rem;color:var(--accent);margin-bottom:4px;font-weight:600}
+.setup-step h4{font-size:.9rem;font-weight:600;margin-bottom:4px}
+.setup-step p{font-size:.8rem;color:var(--muted);line-height:1.6}
+.setup-step code{background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:2px 6px;font-family:var(--mono);font-size:.78rem;color:var(--accent);display:block;margin-top:6px;word-break:break-all}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PIN SCREEN
+══════════════════════════════════════════ -->
+<div id="pin-screen">
+  <div class="pin-logo">🏋️</div>
+  <div class="pin-title" id="pin-title">Durga Tracker</div>
+  <div class="pin-sub" id="pin-sub">Enter your PIN</div>
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-keypad" id="pin-keypad">
+    <button class="pk" onclick="pinKey('1')">1</button>
+    <button class="pk" onclick="pinKey('2')">2</button>
+    <button class="pk" onclick="pinKey('3')">3</button>
+    <button class="pk" onclick="pinKey('4')">4</button>
+    <button class="pk" onclick="pinKey('5')">5</button>
+    <button class="pk" onclick="pinKey('6')">6</button>
+    <button class="pk" onclick="pinKey('7')">7</button>
+    <button class="pk" onclick="pinKey('8')">8</button>
+    <button class="pk" onclick="pinKey('9')">9</button>
+    <button class="pk empty"></button>
+    <button class="pk" onclick="pinKey('0')">0</button>
+    <button class="pk del" onclick="pinBack()">⌫</button>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+</div>
+
+<!-- SYNC BAR -->
+<div id="sync-bar">
+  <div class="sync-dot sync-off" id="sync-dot"></div>
+  <span id="sync-status">Not connected to Google Sheets</span>
+  <button class="btn btn-xs btn-g" style="margin-left:auto" onclick="manualSync()">Sync</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DASHBOARD
+══════════════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="ph">
+    <div>
+      <div style="font-size:.7rem;color:var(--muted);font-weight:600;letter-spacing:.05em;text-transform:uppercase" id="dash-date"></div>
+      <h1>Good morning, <span style="color:var(--accent)">Durga</span> 👋</h1>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--gold)" id="dash-week">W1</div>
+      <div style="font-size:.62rem;color:var(--muted)" id="dash-phase">Accumulation</div>
+    </div>
+  </div>
+
+  <div id="dash-hrv-alert" class="alert ab mb12" style="display:none"></div>
+
+  <div class="g3 mb12">
+    <div class="stat"><div class="sv b" id="d-weight">—</div><div class="sl">Weight kg</div></div>
+    <div class="stat"><div class="sv" id="d-hrv">—</div><div class="sl">HRV ms</div></div>
+    <div class="stat"><div class="sv" id="d-rec">—</div><div class="sl">Recovery %</div></div>
+  </div>
+
+  <div class="stitle">Today's Log</div>
+  <div class="card mb12">
+    <div class="tog-row" onclick="openWeightModal()">
+      <div><div class="tl">⚖️ Morning Weight</div><div class="ts" id="tw-sub">Tap to log</div></div>
+      <div class="tog" id="tg-w"></div>
+    </div>
+    <div class="tog-row" onclick="showPage('workout')">
+      <div><div class="tl">🏋️ Workout / Pickleball</div><div class="ts" id="tw-wo">Tap to log</div></div>
+      <div class="tog" id="tg-wo"></div>
+    </div>
+    <div class="tog-row" onclick="showPage('nutrition')">
+      <div><div class="tl">🥗 Nutrition</div><div class="ts" id="tw-nu">Protein: 0 / 180g</div></div>
+      <div class="tog" id="tg-nu"></div>
+    </div>
+    <div class="tog-row" onclick="showPage('daily')">
+      <div><div class="tl">💚 Whoop + Recovery</div><div class="ts" id="tw-wh">Log HRV, sleep, scores</div></div>
+      <div class="tog" id="tg-wh"></div>
+    </div>
+  </div>
+
+  <div class="stitle">Nutrition Today</div>
+  <div class="card mb12">
+    <div class="row sb mb8"><span class="text-sm fw6">Protein</span><span class="mono text-sm" id="d-pro">0 / 180g</span></div>
+    <div class="pb mb8"><div class="pf pf-g" id="d-pro-bar" style="width:0%"></div></div>
+    <div class="row sb mb8"><span class="text-sm fw6">Calories</span><span class="mono text-sm" id="d-cal">0 / 2460 kcal</span></div>
+    <div class="pb"><div class="pf pf-b" id="d-cal-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="stitle">7-Day Weight Trend</div>
+  <div class="card mb12">
+    <div class="bars" id="d-chart"><div style="width:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.78rem">Log daily weight to see trend</div></div>
+    <div class="blabs" id="d-chart-labs"></div>
+    <div class="row sb mt8"><span class="text-xs text-m">7-day avg</span><span class="mono text-sm fw6" id="d-7avg">—</span></div>
+  </div>
+
+  <div class="stitle">This Week</div>
+  <div class="card mb12">
+    <div class="str-row" id="streak"></div>
+    <div class="row sb mt8"><span class="text-xs text-m">Logged days</span><span class="text-sm fw6 text-g" id="streak-ct">0/7</span></div>
+  </div>
+
+  <div class="stitle">HRV Decision</div>
+  <div class="card mb16" id="hrv-card">
+    <div class="row sb"><span class="text-sm fw6">Today's status</span><span class="badge bb" id="hrv-badge">Log HRV first</span></div>
+    <p class="mt8 text-sm" id="hrv-txt" style="color:var(--muted)">Enter Whoop HRV in Daily Log to get your training recommendation.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DAILY LOG
+══════════════════════════════════════════ -->
+<div class="page" id="page-daily">
+  <div class="ph"><h1>Daily <span style="color:var(--accent)">Log</span></h1><span class="text-xs text-m mono" id="dl-date"></span></div>
+
+  <div class="stitle">Morning Weight</div>
+  <div class="card mb12">
+    <div><label>Weight (kg) — after waking, before eating</label><input type="number" id="l-wt" placeholder="78.0" step="0.1" min="40" max="200"></div>
+    <p class="mt4 text-xs text-m">Weigh 3× — enter the median. Same scale, same position, every day.</p>
+  </div>
+
+  <div class="stitle">Whoop Data</div>
+  <div class="card mb12">
+    <div class="col">
+      <div><label>HRV (ms)</label><input type="number" id="l-hrv" placeholder="47" min="10" max="200"></div>
+      <div><label>Recovery Score (%)</label><input type="number" id="l-rec" placeholder="62" min="0" max="100"></div>
+      <div class="g2">
+        <div><label>Sleep Duration (hrs)</label><input type="number" id="l-slp" placeholder="7.5" step="0.1" min="0" max="14"></div>
+        <div><label>Deep Sleep (hrs)</label><input type="number" id="l-sws" placeholder="1.8" step="0.1" min="0" max="5"></div>
+      </div>
+      <div><label>Resting HR (bpm)</label><input type="number" id="l-rhr" placeholder="71" min="30" max="120"></div>
+    </div>
+  </div>
+
+  <div class="stitle">How You Feel (1–10)</div>
+  <div class="card mb12" id="subj-container"></div>
+
+  <div class="stitle">Notes / Context</div>
+  <div class="card mb12">
+    <textarea id="l-notes" placeholder="Job search updates, stress level, niggles, energy, anything affecting today..."></textarea>
+  </div>
+
+  <button class="btn btn-s btn-blk mb12" onclick="saveDailyLog()">💾 Save Daily Log</button>
+
+  <div class="div"></div>
+  <div class="stitle">Recent (last 5 days)</div>
+  <div id="recent-logs"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     WORKOUT
+══════════════════════════════════════════ -->
+<div class="page" id="page-workout">
+  <div class="ph"><h1>Workout <span style="color:var(--accent)">Log</span></h1><button class="btn btn-g btn-sm" onclick="showMod('mod-custom-ex')">+ Add</button></div>
+
+  <div class="stitle">Session Type</div>
+  <div class="tpills" id="sess-pills">
+    <div class="tp on" onclick="selSess('push-a',this)">Tue · Push A</div>
+    <div class="tp" onclick="selSess('pull-a',this)">Wed · Pull A</div>
+    <div class="tp" onclick="selSess('legs-a',this)">Fri · Legs A</div>
+    <div class="tp" onclick="selSess('upper-a',this)">Sat · Upper</div>
+    <div class="tp" onclick="selSess('pickleball',this)">🏓 Pickleball</div>
+    <div class="tp" onclick="selSess('custom',this)">Custom</div>
+  </div>
+
+  <div class="card mb12 al" id="sess-info">
+    <div class="row sb"><h3 id="s-name">Push A</h3><span class="badge bb" id="s-badge">~85 min</span></div>
+    <p class="mt4 text-xs text-m" id="s-desc">Chest, Shoulders, Triceps · Target strain 13–15</p>
+  </div>
+
+  <!-- Pickleball quick log -->
+  <div id="pkl-section" style="display:none">
+    <div class="card mb12">
+      <div class="col">
+        <div><label>Duration (minutes)</label><input type="number" id="pkl-dur" placeholder="90" min="10" max="240"></div>
+        <div><label>Notes (optional)</label><textarea id="pkl-notes" placeholder="How did it feel? Any niggles? Energy level..."></textarea></div>
+        <button class="btn btn-s btn-blk" onclick="savePickleball()">💾 Save Pickleball Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ex-container"></div>
+
+  <div id="wo-footer" style="display:none">
+    <div class="stitle">Session Wrap-Up</div>
+    <div class="card mb12">
+      <div class="col">
+        <div>
+          <label>Overall Session RPE</label>
+          <div class="sgrid" id="sess-rpe"></div>
+        </div>
+        <div><label>Session Notes</label><textarea id="wo-notes" placeholder="PRs, technique observations, how it felt, anything notable..."></textarea></div>
+      </div>
+    </div>
+    <button class="btn btn-s btn-blk mb12" onclick="saveWorkout()">💾 Save Workout</button>
+  </div>
+
+  <div class="div"></div>
+  <div class="stitle">Recent Sessions</div>
+  <div id="recent-wos"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     NUTRITION
+══════════════════════════════════════════ -->
+<div class="page" id="page-nutrition">
+  <div class="ph"><h1>Nutrition <span style="color:var(--green)">Log</span></h1><span class="text-xs text-m mono" id="nu-date"></span></div>
+
+  <div class="card mb12 gl">
+    <div class="row sb mb8"><h3>Today's Targets</h3><select id="day-type" onchange="updTargets()" style="width:auto;padding:6px 10px;font-size:.78rem">
+      <option value="train">Training Day</option>
+      <option value="rest">Rest Day</option>
+      <option value="flex-g">Flex (Green)</option>
+      <option value="flex-a">Flex (Amber)</option>
+    </select></div>
+    <div class="g3">
+      <div class="stat"><div class="sv g" id="n-pro">0</div><div class="sl">/ 180g P</div></div>
+      <div class="stat"><div class="sv b" id="n-cal">0</div><div class="sl">/ 2460 cal</div></div>
+      <div class="stat"><div class="sv a" id="n-carb">0</div><div class="sl">/ 295g C</div></div>
+    </div>
+    <div class="mt8">
+      <div class="row sb text-xs mb4"><span class="text-m">Protein</span><span class="mono" id="n-pp">0%</span></div>
+      <div class="pb mb8"><div class="pf pf-g" id="n-pb" style="width:0%"></div></div>
+      <div class="row sb text-xs mb4"><span class="text-m">Calories</span><span class="mono" id="n-cp">0%</span></div>
+      <div class="pb"><div class="pf pf-b" id="n-cb" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="stitle">Meals</div>
+  <div id="meals-container"></div>
+
+  <div class="stitle">Add Extra Food</div>
+  <div class="card mb12">
+    <div class="col">
+      <div><label>Food Name</label><input type="text" id="ef-name" placeholder="e.g. Protein bar, Extra rice, Cheat meal..."></div>
+      <div class="g3">
+        <div><label>Protein (g)</label><input type="number" id="ef-p" placeholder="0" min="0"></div>
+        <div><label>Carbs (g)</label><input type="number" id="ef-c" placeholder="0" min="0"></div>
+        <div><label>Fat (g)</label><input type="number" id="ef-f" placeholder="0" min="0"></div>
+      </div>
+      <div><label>Calories (auto if blank)</label><input type="number" id="ef-k" placeholder="Auto" min="0"></div>
+      <select id="ef-type">
+        <option>Pre-workout snack</option><option>Post-workout extra</option>
+        <option>Weekend cheat meal</option><option>Social eating</option>
+        <option>Supplement / shake</option><option>Other</option>
+      </select>
+      <button class="btn btn-g btn-blk" onclick="addExtra()">+ Add to Today</button>
+    </div>
+  </div>
+
+  <div id="extras-section" style="display:none">
+    <div class="stitle">Added Today</div>
+    <div id="extras-list"></div>
+  </div>
+
+  <button class="btn btn-s btn-blk mt8 mb12" onclick="saveNutrition()">💾 Save Nutrition Log</button>
+
+  <div class="div"></div>
+  <div class="stitle">Supplements</div>
+  <div class="card mb12">
+    <div class="tog-row" onclick="togSupp('creatine')"><div><div class="tl">Creatine 5g</div><div class="ts">With dinner</div></div><div class="tog" id="s-creatine"></div></div>
+    <div class="tog-row" onclick="togSupp('vitd')"><div><div class="tl">Vitamin D3+K2 5000 IU</div><div class="ts">With breakfast</div></div><div class="tog" id="s-vitd"></div></div>
+    <div class="tog-row" onclick="togSupp('mag')"><div><div class="tl">Magnesium 300–400mg</div><div class="ts">45 min before sleep</div></div><div class="tog" id="s-mag"></div></div>
+    <div class="tog-row" onclick="togSupp('omega3')"><div><div class="tl">Omega-3 (3 caps total)</div><div class="ts">1 breakfast · 2 dinner</div></div><div class="tog" id="s-omega3"></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PROGRESS
+══════════════════════════════════════════ -->
+<div class="page" id="page-progress">
+  <div class="ph"><h1>Progress <span style="color:var(--gold)">Tracker</span></h1></div>
+  <div class="tpills">
+    <div class="tp on" onclick="swProg('wt',this)">Weight</div>
+    <div class="tp" onclick="swProg('str',this)">Strength</div>
+    <div class="tp" onclick="swProg('body',this)">Body</div>
+    <div class="tp" onclick="swProg('wci',this)">Check-in</div>
+    <div class="tp" onclick="swProg('exp',this)">Export</div>
+  </div>
+
+  <!-- Weight -->
+  <div id="pt-wt">
+    <div class="card mb12"><h3 class="mb8">Weight Trend</h3>
+      <div class="bars" id="pw-chart" style="height:100px"><div style="width:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.78rem">Log daily weight to see chart</div></div>
+      <div class="blabs" id="pw-labs"></div>
+    </div>
+    <div class="g2 mb12">
+      <div class="stat"><div class="sv b">78.0</div><div class="sl">Start kg</div></div>
+      <div class="stat"><div class="sv go" id="pw-cur">—</div><div class="sl">Current (7d avg)</div></div>
+      <div class="stat"><div class="sv" id="pw-chg">—</div><div class="sl">Total change</div></div>
+      <div class="stat"><div class="sv" id="pw-wk">—</div><div class="sl">Weekly rate</div></div>
+    </div>
+    <div class="card mb12 ol" id="wt-dec"><p class="text-sm text-m">Log 7+ days of weight to get recommendations.</p></div>
+    <div class="scx"><table class="dt" id="wt-table"><thead><tr><th>Date</th><th>Weight</th><th>7d Avg</th><th>Δ</th></tr></thead><tbody id="wt-tbody"><tr><td colspan="4" style="text-align:center;color:var(--muted)">No data yet</td></tr></tbody></table></div>
+  </div>
+
+  <!-- Strength -->
+  <div id="pt-str" style="display:none">
+    <div class="card mb12"><h3>Lift Progression</h3><p class="text-xs text-m mt4">Top set per lift from all logged workouts</p></div>
+    <div id="lift-cards"></div>
+    <div class="scx mt12"><table class="dt"><thead><tr><th>Date</th><th>Exercise</th><th>Top Set</th><th>RPE</th></tr></thead><tbody id="str-tbody"><tr><td colspan="4" style="text-align:center;color:var(--muted)">No workouts yet</td></tr></tbody></table></div>
+  </div>
+
+  <!-- Body measurements -->
+  <div id="pt-body" style="display:none">
+    <div class="card mb12 gol">
+      <div class="row sb mb4"><h3>Body Measurements</h3><button class="btn btn-g btn-sm" onclick="showMod('mod-meas')">+ Log</button></div>
+      <p class="text-xs text-m">Every 4 weeks: Week 1, 5, 9, 12</p>
+    </div>
+    <div class="scx"><table class="dt"><thead><tr><th>Site</th><th>W1</th><th>W5</th><th>W9</th><th>W12</th><th>Δ</th></tr></thead><tbody id="meas-tbody">
+      <tr><td>Waist</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Chest</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Hips</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>R.Arm flex</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>R.Arm relax</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>R.Thigh</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>R.Calf</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Neck</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- Weekly check-in -->
+  <div id="pt-wci" style="display:none">
+    <div class="card mb12 gol"><h3>Weekly Check-in</h3><p class="text-xs text-m mt4">Complete every Sunday · Auto-calculates WPS</p></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border-radius:var(--r2);padding:8px 12px;margin-bottom:12px">
+      <button class="btn btn-g btn-sm" onclick="chgWk(-1)">‹</button>
+      <span class="mono fw6" id="ci-wk-lbl">Week 1</span>
+      <button class="btn btn-g btn-sm" onclick="chgWk(1)">›</button>
+    </div>
+    <div class="card mb12" id="ci-scores"></div>
+    <div class="card mb12">
+      <div class="stitle">Key Lifts This Week</div>
+      <div class="col" id="ci-lifts"></div>
+    </div>
+    <div class="card mb12">
+      <div class="stat"><div class="sv go" id="ci-wps">— / 50</div><div class="sl">Weekly Performance Score</div></div>
+      <p class="text-xs text-m mt8">≥40 excellent · 30–39 good · 20–29 challenging · &lt;20 intervention needed</p>
+    </div>
+    <div class="card mb12"><label>Week Summary</label><textarea id="ci-sum" placeholder="How did this week go? Best session, hardest day, what to change next week..."></textarea></div>
+    <button class="btn btn-s btn-blk" onclick="saveCI()">💾 Save Check-in</button>
+  </div>
+
+  <!-- Export -->
+  <div id="pt-exp" style="display:none">
+    <div class="card mb12 al"><h3 class="mb8">Export Your Data</h3><p class="text-sm text-m">Back up weekly. All data is yours.</p></div>
+    <div class="col mb16">
+      <button class="btn btn-p btn-blk" onclick="expJSON()">📥 Download JSON Backup</button>
+      <button class="btn btn-g btn-blk" onclick="copyCSV()">📋 Copy Weight CSV → Google Sheets</button>
+      <button class="btn btn-g btn-blk" onclick="expWoCSV()">🏋️ Download Workout CSV</button>
+      <button class="btn btn-g btn-blk" onclick="expNutrCSV()">🥗 Download Nutrition CSV</button>
+      <button class="btn btn-amber btn-blk" onclick="manualSync()">☁️ Force Sync to Google Sheets</button>
+    </div>
+    <div class="card rl">
+      <h3 class="mb4" style="color:var(--red)">Danger Zone</h3>
+      <p class="text-xs text-m mb8">Permanently deletes all data. Cannot be undone.</p>
+      <button class="btn btn-d btn-sm" onclick="resetAll()">🗑️ Reset All Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     GUIDE
+══════════════════════════════════════════ -->
+<div class="page" id="page-guide">
+  <div class="ph"><h1>Guide &amp; <span style="color:var(--accent)">Plans</span></h1></div>
+  <div class="tpills" id="gtabs">
+    <div class="tp on" onclick="swGuide('prog',this)">Programme</div>
+    <div class="tp" onclick="swGuide('prehab',this)">Prehab</div>
+    <div class="tp" onclick="swGuide('nutr',this)">Nutrition</div>
+    <div class="tp" onclick="swGuide('hrv',this)">HRV Guide</div>
+    <div class="tp" onclick="swGuide('dec',this)">Decisions</div>
+    <div class="tp" onclick="swGuide('inj',this)">Injury</div>
+    <div class="tp" onclick="swGuide('setup',this)">⚙️ Sheets Setup</div>
+  </div>
+  <div id="guide-content"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SETTINGS (accessible from Guide > Setup)
+══════════════════════════════════════════ -->
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="ni on" onclick="showPage('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dash</button>
+  <button class="ni" onclick="showPage('daily')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Daily</button>
+  <button class="ni" onclick="showPage('workout')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 5v14M18 5v14M3 7h3M18 7h3M3 17h3M18 17h3M6 12h12"/></svg>Workout</button>
+  <button class="ni" onclick="showPage('nutrition')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12h8M12 8v8"/></svg>Food</button>
+  <button class="ni" onclick="showPage('progress')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Progress</button>
+  <button class="ni" onclick="showPage('guide')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Guide</button>
+</nav>
+
+<!-- MODALS -->
+<div class="ov" id="mod-weight">
+  <div class="mod">
+    <div class="mhand"></div>
+    <button class="mclose" onclick="closeMod('mod-weight')">✕</button>
+    <div class="mtitle">⚖️ Morning Weight</div>
+    <label>Weight (kg)</label>
+    <input type="number" id="mw-val" placeholder="78.0" step="0.1" style="font-size:2rem;text-align:center;margin-bottom:12px">
+    <p class="text-xs text-m mb12">After waking · After first void · Before eating · Same scale · Same floor position</p>
+    <button class="btn btn-s btn-blk" onclick="saveQWeight()">Save</button>
+  </div>
+</div>
+
+<div class="ov" id="mod-meas">
+  <div class="mod">
+    <div class="mhand"></div>
+    <button class="mclose" onclick="closeMod('mod-meas')">✕</button>
+    <div class="mtitle">📐 Measurements</div>
+    <div class="mb12"><label>Week</label><select id="mw-wk"><option value="1">Week 1</option><option value="5">Week 5</option><option value="9">Week 9</option><option value="12">Week 12</option></select></div>
+    <div class="col">
+      <div><label>Waist (cm)</label><input type="number" id="m-waist" placeholder="e.g. 86" step="0.1"></div>
+      <div><label>Chest (cm)</label><input type="number" id="m-chest" placeholder="e.g. 98" step="0.1"></div>
+      <div><label>Hips (cm)</label><input type="number" id="m-hips" placeholder="e.g. 96" step="0.1"></div>
+      <div><label>R. Arm Flexed (cm)</label><input type="number" id="m-armf" placeholder="e.g. 35" step="0.1"></div>
+      <div><label>R. Arm Relaxed (cm)</label><input type="number" id="m-armr" placeholder="e.g. 32" step="0.1"></div>
+      <div><label>R. Thigh (cm)</label><input type="number" id="m-thigh" placeholder="e.g. 56" step="0.1"></div>
+      <div><label>R. Calf (cm)</label><input type="number" id="m-calf" placeholder="e.g. 37" step="0.1"></div>
+      <div><label>Neck (cm)</label><input type="number" id="m-neck" placeholder="e.g. 39" step="0.1"></div>
+    </div>
+    <button class="btn btn-s btn-blk mt12" onclick="saveMeas()">Save Measurements</button>
+  </div>
+</div>
+
+<div class="ov" id="mod-custom-ex">
+  <div class="mod">
+    <div class="mhand"></div>
+    <button class="mclose" onclick="closeMod('mod-custom-ex')">✕</button>
+    <div class="mtitle">+ Custom Exercise</div>
+    <div class="col">
+      <div><label>Exercise Name</label><input type="text" id="cx-name" placeholder="e.g. Cable curl..."></div>
+      <div><label>Target Sets</label><input type="number" id="cx-sets" placeholder="3" min="1"></div>
+      <div><label>Target Reps</label><input type="text" id="cx-reps" placeholder="10–12"></div>
+      <div><label>Cues / Notes</label><textarea id="cx-notes" placeholder="Coaching cues, tempo, rest..."></textarea></div>
+    </div>
+    <button class="btn btn-s btn-blk mt12" onclick="addCustomEx()">Add to Session</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DB (localStorage cache + Google Sheets sync)
+// ═══════════════════════════════════════════════════
+const DB = {
+  get(k){ try{ return JSON.parse(localStorage.getItem('dtrk_'+k)) }catch{ return null } },
+  set(k,v){ localStorage.setItem('dtrk_'+k, JSON.stringify(v)); queueSync(k,v); },
+  del(k){ localStorage.removeItem('dtrk_'+k) },
+  all(){
+    const d={};
+    Object.keys(localStorage).filter(k=>k.startsWith('dtrk_')).forEach(k=>{
+      try{ d[k.replace('dtrk_','')] = JSON.parse(localStorage.getItem(k)) }catch{}
+    });
+    return d;
+  }
+};
+
+// ═══════════════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ═══════════════════════════════════════════════════
+let syncQueue = [];
+let syncTimer = null;
+let sheetUrl = '';
+
+function getSheetUrl(){ return DB.get('sheet_url')||''; }
+
+function queueSync(key, val){
+  syncQueue.push({key, val, time: Date.now()});
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(flushSync, 3000); // sync 3s after last write
+}
+
+async function flushSync(){
+  const url = getSheetUrl();
+  if(!url || !syncQueue.length){ updateSyncBar('off'); return; }
+  updateSyncBar('pending');
+  const batch = [...syncQueue];
+  syncQueue = [];
+  try{
+    const payload = { action:'batchWrite', data: batch };
+    await fetch(url, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    updateSyncBar('ok');
+  } catch(e){
+    syncQueue = [...batch, ...syncQueue]; // requeue on fail
+    updateSyncBar('err');
+  }
+}
+
+async function manualSync(){
+  const url = getSheetUrl();
+  if(!url){
+    toast('⚠️ No Sheet URL set. Go to Guide → Setup');
+    return;
+  }
+  updateSyncBar('pending');
+  toast('Syncing to Google Sheets...');
+  try{
+    const all = DB.all();
+    await fetch(url, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'fullSync', data: all})
+    });
+    updateSyncBar('ok');
+    toast('✓ Synced to Google Sheets');
+  } catch(e){
+    updateSyncBar('err');
+    toast('❌ Sync failed — check Sheet URL in Setup');
+  }
+}
+
+function updateSyncBar(status){
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-status');
+  dot.className = 'sync-dot';
+  if(status==='ok'){    dot.classList.add('sync-ok');      txt.textContent='Synced to Google Sheets ✓';}
+  else if(status==='pending'){dot.classList.add('sync-pending');txt.textContent='Syncing...';}
+  else if(status==='err'){    dot.classList.add('sync-err');    txt.textContent='Sync failed — check Setup';}
+  else{                       dot.classList.add('sync-off');    txt.textContent= getSheetUrl()?'Sheets connected':'No Sheet connected — see Guide → Setup';}
+}
+
+// ═══════════════════════════════════════════════════
+// PIN SYSTEM
+// ═══════════════════════════════════════════════════
+let pinBuffer = '';
+let pinMode = 'check'; // 'setup' | 'check' | 'confirm'
+let pinSetupFirst = '';
+let lastActiveTime = Date.now();
+const PIN_LENGTH = 4;
+const LOCK_TIMEOUT = 60 * 60 * 1000; // 1 hour
+
+function checkPinOnLoad(){
+  const stored = DB.get('pin');
+  if(!stored){
+    // First time — set up PIN
+    pinMode = 'setup';
+    document.getElementById('pin-title').textContent = 'Set Your PIN';
+    document.getElementById('pin-sub').textContent = 'Choose a 4-digit PIN to protect your data';
+    showPinScreen();
+  } else {
+    // Check if session is still active
+    const last = parseInt(sessionStorage.getItem('lastActive')||'0');
+    const now = Date.now();
+    if(last && (now - last) < LOCK_TIMEOUT){
+      hidePinScreen();
+    } else {
+      pinMode = 'check';
+      document.getElementById('pin-title').textContent = 'Durga Tracker';
+      document.getElementById('pin-sub').textContent = 'Enter your 4-digit PIN';
+      showPinScreen();
+    }
+  }
+}
+
+function showPinScreen(){ document.getElementById('pin-screen').classList.remove('hidden'); }
+function hidePinScreen(){ document.getElementById('pin-screen').classList.add('hidden'); sessionStorage.setItem('lastActive', Date.now()); }
+
+function pinKey(d){
+  if(pinBuffer.length >= PIN_LENGTH) return;
+  pinBuffer += d;
+  updatePinDots();
+  if(pinBuffer.length === PIN_LENGTH) setTimeout(processPIN, 150);
+}
+
+function pinBack(){
+  pinBuffer = pinBuffer.slice(0,-1);
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function updatePinDots(){
+  for(let i=0;i<PIN_LENGTH;i++){
+    const dot = document.getElementById('pd'+i);
+    dot.classList.toggle('filled', i < pinBuffer.length);
+    dot.classList.remove('error');
+  }
+}
+
+function processPIN(){
+  if(pinMode==='setup'){
+    pinSetupFirst = pinBuffer;
+    pinBuffer = '';
+    updatePinDots();
+    pinMode = 'confirm';
+    document.getElementById('pin-sub').textContent = 'Confirm your PIN';
+    document.getElementById('pin-error').textContent = '';
+  } else if(pinMode==='confirm'){
+    if(pinBuffer === pinSetupFirst){
+      DB.set('pin', hashPIN(pinBuffer));
+      pinBuffer = '';
+      document.getElementById('pin-error').textContent = '';
+      toast('PIN set successfully ✓');
+      hidePinScreen();
+    } else {
+      pinError('PINs don\'t match — try again');
+      pinMode = 'setup';
+      pinSetupFirst = '';
+      document.getElementById('pin-sub').textContent = 'Choose a 4-digit PIN';
+    }
+  } else { // check
+    if(hashPIN(pinBuffer) === DB.get('pin')){
+      document.getElementById('pin-error').textContent = '';
+      hidePinScreen();
+    } else {
+      pinError('Incorrect PIN');
+    }
+  }
+}
+
+function pinError(msg){
+  document.getElementById('pin-error').textContent = msg;
+  for(let i=0;i<PIN_LENGTH;i++) document.getElementById('pd'+i).classList.add('error');
+  pinBuffer = '';
+  setTimeout(updatePinDots, 600);
+}
+
+function hashPIN(pin){
+  // Simple hash — not cryptographic but sufficient for local PIN
+  let h = 0;
+  for(let i=0;i<pin.length;i++){ h = ((h<<5)-h)+pin.charCodeAt(i); h|=0; }
+  return 'ph_'+Math.abs(h).toString(36)+'_'+pin.length;
+}
+
+// Auto-lock on visibility change
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){
+    sessionStorage.setItem('lastActive', Date.now());
+  } else {
+    const last = parseInt(sessionStorage.getItem('lastActive')||Date.now());
+    if(Date.now() - last > LOCK_TIMEOUT && DB.get('pin')){
+      pinBuffer=''; pinMode='check';
+      document.getElementById('pin-title').textContent='Durga Tracker';
+      document.getElementById('pin-sub').textContent='Enter your 4-digit PIN';
+      showPinScreen();
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function toast(msg, dur=2200){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.getElementById('page-'+id)?.classList.add('active');
+  const map={dashboard:0,daily:1,workout:2,nutrition:3,progress:4,guide:5};
+  if(map[id]!==undefined) document.querySelectorAll('.ni')[map[id]]?.classList.add('on');
+  if(id==='dashboard') refreshDash();
+  if(id==='daily'){ renderSubjScores(); loadDailyUI(); }
+  if(id==='workout'){ renderSession('push-a'); renderScoreGrid('sess-rpe','sess_rpe'); loadRecentWos(); }
+  if(id==='nutrition'){ renderMeals(); loadSuppState(); }
+  if(id==='progress') renderProgress();
+  if(id==='guide') swGuide('prog', document.querySelector('#gtabs .tp'));
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════
+function showMod(id){ document.getElementById(id)?.classList.add('open'); }
+function closeMod(id){ document.getElementById(id)?.classList.remove('open'); }
+document.addEventListener('click',e=>{ if(e.target.classList.contains('ov')) e.target.classList.remove('open'); });
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+function today(){ return new Date().toISOString().split('T')[0]; }
+function fmtDate(d){ return new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+function setTog(id, on){ document.getElementById(id)?.classList.toggle('on',on); }
+function getWk(){
+  const cfg = getCfg();
+  const diff = Math.floor((Date.now()-new Date(cfg.startDate))/(1000*60*60*24*7));
+  return Math.max(1,Math.min(12,diff+1));
+}
+function getCfg(){
+  return DB.get('config')||{name:'Durga',startWeight:78,targetWeight:73,protein:180,calories:2460,restCal:2050,hrvBase:47,startDate:'2026-03-28'};
+}
+
+// ═══════════════════════════════════════════════════
+// SUBJECTIVE SCORES
+// ═══════════════════════════════════════════════════
+const SUBJ = [
+  {k:'energy',l:'Energy Level',h:'How energised do you feel today?'},
+  {k:'recovery',l:'Recovery Quality',h:'How recovered going into training?'},
+  {k:'mood',l:'Mood / Stress',h:'1 = very stressed · 10 = very calm'},
+  {k:'training',l:'Training Performance',h:'How did / will your session feel?'},
+  {k:'sleep_q',l:'Sleep Quality',h:'How refreshed on waking (subjective)?'},
+  {k:'hunger',l:'Hunger',h:'1 = never hungry · 10 = always starving'}
+];
+
+let subjScores = {};
+
+function renderSubjScores(){
+  const d = today();
+  const log = DB.get('daily_'+d)||{};
+  subjScores = log.subj||{};
+  const c = document.getElementById('subj-container');
+  c.innerHTML = SUBJ.map(f=>`
+    <div style="margin-bottom:14px">
+      <div class="row sb mb4">
+        <div class="fw6 text-sm">${f.l}</div>
+        <span class="mono text-sm text-b" id="sd-${f.k}">${subjScores[f.k]||'—'}/10</span>
+      </div>
+      <p class="text-xs text-m" style="margin-bottom:6px">${f.h}</p>
+      <div class="sgrid">${[1,2,3,4,5,6,7,8,9,10].map(n=>`
+        <div class="sb-s s${n} ${subjScores[f.k]==n?'act':''}" onclick="setSS('${f.k}',${n},this)">${n}</div>`).join('')}</div>
+    </div>`).join('');
+}
+
+function setSS(k,v,el){
+  subjScores[k]=v;
+  document.getElementById('sd-'+k).textContent=v+'/10';
+  el.closest('.sgrid').querySelectorAll('.sb-s').forEach(b=>b.classList.remove('act'));
+  el.classList.add('act');
+}
+
+// ═══════════════════════════════════════════════════
+// DAILY LOG
+// ═══════════════════════════════════════════════════
+function saveDailyLog(){
+  const d = today();
+  const log = DB.get('daily_'+d)||{};
+  log.date=d;
+  log.weight = parseFloat(document.getElementById('l-wt').value)||null;
+  log.hrv = parseInt(document.getElementById('l-hrv').value)||null;
+  log.recovery = parseInt(document.getElementById('l-rec').value)||null;
+  log.sleepDur = parseFloat(document.getElementById('l-slp').value)||null;
+  log.sleepSWS = parseFloat(document.getElementById('l-sws').value)||null;
+  log.rhr = parseInt(document.getElementById('l-rhr').value)||null;
+  log.subj = subjScores;
+  log.notes = document.getElementById('l-notes').value;
+  DB.set('daily_'+d, log);
+  if(log.weight){ addWeightEntry(d, log.weight); }
+  toast('Daily log saved ✓');
+  loadRecentLogs();
+  refreshDash();
+}
+
+function addWeightEntry(d, w){
+  const wlog = DB.get('weightLog')||[];
+  const idx = wlog.findIndex(e=>e.date===d);
+  if(idx>=0) wlog[idx].weight=w; else wlog.push({date:d,weight:w});
+  wlog.sort((a,b)=>a.date.localeCompare(b.date));
+  DB.set('weightLog',wlog);
+}
+
+function loadDailyUI(){
+  const d=today();
+  const log=DB.get('daily_'+d)||{};
+  document.getElementById('dl-date').textContent=fmtDate(d);
+  if(log.weight) document.getElementById('l-wt').value=log.weight;
+  if(log.hrv) document.getElementById('l-hrv').value=log.hrv;
+  if(log.recovery) document.getElementById('l-rec').value=log.recovery;
+  if(log.sleepDur) document.getElementById('l-slp').value=log.sleepDur;
+  if(log.sleepSWS) document.getElementById('l-sws').value=log.sleepSWS;
+  if(log.rhr) document.getElementById('l-rhr').value=log.rhr;
+  if(log.notes) document.getElementById('l-notes').value=log.notes;
+  loadRecentLogs();
+}
+
+function loadRecentLogs(){
+  const c=document.getElementById('recent-logs');
+  const logs=[];
+  for(let i=0;i<5;i++){
+    const dt=new Date(); dt.setDate(dt.getDate()-i);
+    const key=dt.toISOString().split('T')[0];
+    const l=DB.get('daily_'+key);
+    if(l&&(l.weight||l.hrv)) logs.push(l);
+  }
+  if(!logs.length){c.innerHTML='<p class="text-sm text-m text-c">No logs yet.</p>';return;}
+  c.innerHTML=logs.map(l=>`
+    <div class="card sm mb8">
+      <div class="row sb">
+        <span class="fw6 text-sm">${fmtDate(l.date)}</span>
+        <div style="display:flex;gap:5px">
+          ${l.weight?`<span class="badge bb">${l.weight} kg</span>`:''}
+          ${l.hrv?`<span class="badge bg">HRV ${l.hrv}</span>`:''}
+          ${l.recovery?`<span class="badge ba">Rec ${l.recovery}%</span>`:''}
+        </div>
+      </div>
+      ${l.notes?`<p class="text-xs text-m mt4">${l.notes.substring(0,80)}</p>`:''}
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// WORKOUT DATA
+// ═══════════════════════════════════════════════════
+const SESSIONS = {
+  'push-a':{name:'Push A',badge:'~85 min',color:'var(--amber)',desc:'Chest · Shoulders · Triceps',
+    ex:[
+      {id:'bench',n:'Barbell Bench Press',s:3,r:'6–8',t:'3010',rest:'3 min',rpe:7,cue:'Bar to sternum. Elbows 45–60°.'},
+      {id:'incdb',n:'Incline DB Press (30°)',s:3,r:'10–12',t:'3010',rest:'2 min',rpe:7,cue:'Upper chest. Full stretch at bottom.'},
+      {id:'dbohp',n:'Seated DB Overhead Press',s:3,r:'10–12',t:'3010',rest:'2 min',rpe:7,cue:'Strict — no back arch.'},
+      {id:'lat',n:'Cable Lateral Raise',s:3,r:'15–20',t:'2010',rest:'90s',rpe:7,cue:'Constant tension. Light and strict.'},
+      {id:'pdown',n:'Cable Rope Pushdown',s:3,r:'12–15',t:'2010',rest:'90s',rpe:7,cue:'Elbows fixed. Spread rope at bottom.'},
+      {id:'ohdext',n:'Overhead DB Tricep Ext',s:3,r:'12–15',t:'3010',rest:'90s',rpe:7,cue:'Long head stretch. Control eccentric.'},
+      {id:'fly',n:'Cable Pec Fly',s:3,r:'15–20',t:'2010',rest:'90s',rpe:7,cue:'Full adduction. Squeeze midline.'}
+    ]},
+  'pull-a':{name:'Pull A',badge:'~90 min',color:'var(--accent)',desc:'Back · Biceps · Rear Delts',
+    ex:[
+      {id:'dl',n:'Barbell Deadlift',s:3,r:'4–6',t:'21X0',rest:'3–4 min',rpe:7,cue:'Remove slack. Bar stays on legs.'},
+      {id:'csrow',n:'Chest-Supported DB Row',s:3,r:'10–12',t:'3010',rest:'2 min',rpe:7,cue:'Drive elbow to hip. Full retraction.'},
+      {id:'pup',n:'Pull-Up / Lat Pulldown',s:3,r:'6–8',t:'3010',rest:'2 min',rpe:7,cue:'Full hang. Chin clears bar.'},
+      {id:'spd',n:'Straight-Arm Pulldown',s:3,r:'12–15',t:'2011',rest:'90s',rpe:7,cue:'Elbow to pocket. 1s pause.'},
+      {id:'idc',n:'Incline DB Curl',s:3,r:'10–12',t:'3010',rest:'90s',rpe:7,cue:'Long head stretch. Strict.'},
+      {id:'fp',n:'Face Pull',s:3,r:'15–20',t:'2011',rest:'90s',rpe:6,cue:'Elbows high. Thumbs back.'},
+      {id:'ham',n:'Hammer Curl',s:3,r:'12–15',t:'2010',rest:'90s',rpe:7,cue:'No swing. Brachialis focus.'}
+    ]},
+  'legs-a':{name:'Legs A',badge:'~95 min',color:'var(--green)',desc:'Quads · Hams · Glutes · Core',
+    ex:[
+      {id:'sq',n:'High Bar Back Squat',s:3,r:'5–6',t:'3010',rest:'3–4 min',rpe:7,cue:'Neutral spine depth. No butt wink.'},
+      {id:'rdl',n:'Romanian Deadlift',s:3,r:'8–10',t:'4010',rest:'2 min',rpe:7,cue:'Push hips back. 4s eccentric.'},
+      {id:'rlunge',n:'DB Reverse Lunge',s:3,r:'10 each',t:'3010',rest:'2 min',rpe:7,cue:'Left leg first. Glute/ham emphasis.'},
+      {id:'lp',n:'Leg Press',s:3,r:'12–15',t:'3010',rest:'2 min',rpe:7,cue:'High foot = glutes. Mid = quads.'},
+      {id:'lc',n:'Seated Leg Curl',s:3,r:'12–15',t:'3010',rest:'90s',rpe:7,cue:'3s eccentric. Full ROM.'},
+      {id:'be',n:'Back Extension (45°)',s:3,r:'12–15',t:'3011',rest:'90s',rpe:7,cue:'Glute bias. 2s hold at top.'},
+      {id:'hlr',n:'Hanging Leg Raise',s:3,r:'10–12',t:'2010',rest:'90s',rpe:7,cue:'Posterior pelvic tilt at top. No swing.'},
+      {id:'cr',n:'Standing Calf Raise',s:3,r:'15–20',t:'3013',rest:'90s',rpe:7,cue:'Deep stretch. 3s pause top. Slow only.'}
+    ]},
+  'upper-a':{name:'Upper (Flex)',badge:'~80 min',color:'var(--purple)',desc:'Full upper · Only if Whoop ≥67%',
+    ex:[
+      {id:'ohp',n:'Standing Barbell OHP',s:3,r:'5–6',t:'3010',rest:'3 min',rpe:7,cue:'Strict. Glutes squeezed. No leg drive.'},
+      {id:'dbflat',n:'DB Flat Bench',s:3,r:'10–12',t:'3010',rest:'2 min',rpe:7,cue:'Greater ROM. Second chest hit.'},
+      {id:'bbrow',n:'Barbell Bent-Over Row',s:3,r:'8–10',t:'3010',rest:'2 min',rpe:7,cue:'45° torso. Row to sternum.'},
+      {id:'lat2',n:'Cable Lateral Raise',s:3,r:'15–20',t:'2010',rest:'90s',rpe:6,cue:'Second weekly medial delt hit.'},
+      {id:'ezc',n:'EZ-Bar Curl',s:3,r:'10–12',t:'3010',rest:'90s',rpe:7,cue:'Reduced wrist stress.'},
+      {id:'skull',n:'Skull Crushers',s:3,r:'10–12',t:'3010',rest:'90s',rpe:7,cue:'Long head. Elbows stable.'},
+      {id:'fp2',n:'Face Pull',s:3,r:'15–20',t:'2011',rest:'90s',rpe:6,cue:'Non-negotiable. Light and strict.'}
+    ]},
+  'pickleball':{name:'Pickleball 🏓',badge:'90 min',color:'var(--whoop)',desc:'Post-workout cardio',ex:[]},
+  'custom':{name:'Custom Session',badge:'Flexible',color:'var(--muted)',desc:'Add exercises manually',ex:[]}
+};
+
+let curSess = 'push-a';
+let customExArr = [];
+let setData = {};
+let sessRPE = null;
+
+function selSess(id, btn){
+  document.querySelectorAll('#sess-pills .tp').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  curSess=id; setData={}; customExArr=[];
+  const isPkl=id==='pickleball';
+  document.getElementById('pkl-section').style.display=isPkl?'block':'none';
+  document.getElementById('ex-container').style.display=isPkl?'none':'block';
+  document.getElementById('wo-footer').style.display=isPkl?'none':'block';
+  const s=SESSIONS[id];
+  if(s){
+    document.getElementById('sess-info').style.cssText=`border-left-color:${s.color}`;
+    document.getElementById('s-name').textContent=s.name;
+    document.getElementById('s-badge').textContent=s.badge;
+    document.getElementById('s-desc').textContent=s.desc;
+  }
+  if(!isPkl) renderSession(id);
+}
+
+function renderSession(id){
+  const s=SESSIONS[id];
+  const c=document.getElementById('ex-container');
+  document.getElementById('wo-footer').style.display='block';
+  if(!s||id==='pickleball'||id==='custom'){
+    c.innerHTML=id==='custom'?'<div class="card mb8"><p class="text-sm text-m">Add exercises using the + Add button above.</p></div>':'';
+    return;
+  }
+  const allEx=[...s.ex,...customExArr];
+  c.innerHTML=allEx.map(ex=>`
+    <div class="exb">
+      <div class="exh" onclick="togEx('${ex.id}')">
+        <div><h4>${ex.n}</h4><div class="exmeta">${ex.s}×${ex.r} · ${ex.t||'—'} · ${ex.rest||'—'} · RPE ${ex.rpe||'—'}</div></div>
+        <span style="color:var(--muted)">▸</span>
+      </div>
+      <div class="exbod" id="exb-${ex.id}">
+        <p class="text-xs text-m" style="font-style:italic;margin-bottom:8px">${ex.cue||''}</p>
+        <div class="sh"><span>Set</span><span>kg</span><span>Reps</span><span>RPE</span><span></span></div>
+        <div id="sets-${ex.id}">${renderSets(ex.id,ex.s)}</div>
+        <button class="btn btn-g btn-xs mt8" onclick="addSet('${ex.id}')">+ Set</button>
+      </div>
+    </div>`).join('');
+  renderScoreGrid('sess-rpe','sess_rpe');
+}
+
+function renderSets(exId,count){
+  if(!setData[exId]) setData[exId]=[];
+  return Array.from({length:count},(_, i)=>{
+    const p=setData[exId][i]||{};
+    return `<div class="set-row" id="sr-${exId}-${i}">
+      <div class="sn">${i+1}</div>
+      <input class="si" type="number" placeholder="kg" step="0.5" min="0" id="sk-${exId}-${i}" value="${p.kg||''}" onchange="capSet('${exId}',${i})">
+      <input class="si" type="number" placeholder="reps" min="0" id="sr2-${exId}-${i}" value="${p.reps||''}" onchange="capSet('${exId}',${i})">
+      <input class="si" type="number" placeholder="RPE" step="0.5" min="1" max="10" id="srpe-${exId}-${i}" value="${p.rpe||''}" onchange="capSet('${exId}',${i})">
+      <button class="sdel" onclick="delSet('${exId}',${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addSet(exId){
+  const s=SESSIONS[curSess];
+  const ex=(s?.ex||[]).find(e=>e.id===exId)||customExArr.find(e=>e.id===exId);
+  if(ex){ ex.s++; document.getElementById('sets-'+exId).innerHTML=renderSets(exId,ex.s); }
+}
+
+function delSet(exId,i){
+  document.getElementById('sr-'+exId+'-'+i)?.remove();
+  if(setData[exId]) setData[exId].splice(i,1);
+}
+
+function capSet(exId,i){
+  if(!setData[exId]) setData[exId]=[];
+  setData[exId][i]={
+    kg:parseFloat(document.getElementById('sk-'+exId+'-'+i)?.value)||null,
+    reps:parseInt(document.getElementById('sr2-'+exId+'-'+i)?.value)||null,
+    rpe:parseFloat(document.getElementById('srpe-'+exId+'-'+i)?.value)||null
+  };
+}
+
+function togEx(id){
+  document.getElementById('exb-'+id)?.classList.toggle('open');
+}
+
+function saveWorkout(){
+  const d=today();
+  const s=SESSIONS[curSess];
+  const wo={date:d,session:curSess,sessionName:s?.name||'Custom',notes:document.getElementById('wo-notes').value,sets:setData,rpe:rpeScores['sess_rpe']||null};
+  const wolog=DB.get('workoutLog')||[];
+  wolog.push(wo);
+  DB.set('workoutLog',wolog);
+  const log=DB.get('daily_'+d)||{};
+  log.workedOut=true; log.session=curSess;
+  DB.set('daily_'+d,log);
+  toast('Workout saved ✓');
+  setData={};
+  loadRecentWos();
+  refreshDash();
+}
+
+function savePickleball(){
+  const d=today();
+  const dur=parseInt(document.getElementById('pkl-dur').value)||90;
+  const wo={date:d,session:'pickleball',sessionName:'Pickleball 🏓',duration:dur,notes:document.getElementById('pkl-notes').value,type:'pickleball'};
+  const wolog=DB.get('workoutLog')||[];
+  wolog.push(wo);
+  DB.set('workoutLog',wolog);
+  const log=DB.get('daily_'+d)||{};
+  log.pickleball=true;
+  DB.set('daily_'+d,log);
+  document.getElementById('pkl-dur').value='';
+  document.getElementById('pkl-notes').value='';
+  toast(`Pickleball ${dur} min saved ✓`);
+  loadRecentWos();
+  refreshDash();
+}
+
+function addCustomEx(){
+  const n=document.getElementById('cx-name').value;
+  if(!n){toast('Enter exercise name');return;}
+  customExArr.push({id:'cx_'+Date.now(),n,s:parseInt(document.getElementById('cx-sets').value)||3,r:document.getElementById('cx-reps').value||'10–12',cue:document.getElementById('cx-notes').value});
+  closeMod('mod-custom-ex');
+  renderSession(curSess);
+  toast('Exercise added ✓');
+}
+
+function loadRecentWos(){
+  const wolog=DB.get('workoutLog')||[];
+  const c=document.getElementById('recent-wos');
+  const recent=wolog.slice(-5).reverse();
+  if(!recent.length){c.innerHTML='<p class="text-sm text-m text-c">No sessions yet.</p>';return;}
+  c.innerHTML=recent.map(w=>`
+    <div class="card sm mb8">
+      <div class="row sb">
+        <span class="fw6 text-sm">${fmtDate(w.date)}</span>
+        <span class="badge ${w.type==='pickleball'?'bg':'bb'}">${w.sessionName}</span>
+      </div>
+      ${w.type==='pickleball'?`<p class="text-xs text-m mt4">🏓 ${w.duration} min</p>`:''}
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// SCORE GRID
+// ═══════════════════════════════════════════════════
+const rpeScores={};
+
+function renderScoreGrid(containerId,key){
+  const c=document.getElementById(containerId);
+  if(!c) return;
+  c.innerHTML=[1,2,3,4,5,6,7,8,9,10].map(n=>`
+    <div class="sb-s s${n}" onclick="setRPE('${key}',${n},'${containerId}',this)">${n}</div>`).join('');
+}
+
+function setRPE(key,val,cid,el){
+  rpeScores[key]=val;
+  document.querySelectorAll('#'+cid+' .sb-s').forEach(b=>b.classList.remove('act'));
+  el.classList.add('act');
+}
+
+// ═══════════════════════════════════════════════════
+// NUTRITION
+// ═══════════════════════════════════════════════════
+const MEALS=[
+  {id:'m1',t:'Meal 1 — Breakfast',time:'7:30–8 AM',def:{p:52,c:75,f:17,k:660},
+   items:['1 scoop whey (30g)','220g Greek yogurt','60g oats','10g chia','12g almonds','100ml oat milk']},
+  {id:'m2',t:'Meal 2 — Mid-Morning',time:'11:00 AM',def:{p:37,c:28,f:6,k:315},
+   items:['200g cottage cheese','1 apple or banana','1 omega-3 capsule']},
+  {id:'m3',t:'Meal 3 — Lunch',time:'1:30–2 PM',def:{p:58,c:95,f:12,k:730},
+   items:['250g chicken breast','260g rice (training)','150g vegetables','1 banana','10ml olive oil']},
+  {id:'m4',t:'Meal 4 — Dinner',time:'by 8 PM',def:{p:58,c:80,f:18,k:720},
+   items:['250g chicken breast','230g rice','200g vegetables','15ml olive oil','5g creatine']}
+];
+
+const TARGETS={train:{p:180,c:295,f:67,k:2460},rest:{p:180,c:175,f:72,k:2050},'flex-g':{p:180,c:270,f:68,k:2350},'flex-a':{p:180,c:185,f:72,k:2100}};
+let todayExtras=[];
+
+function renderMeals(){
+  const d=today();
+  const nlog=DB.get('nutr_'+d)||{};
+  todayExtras=nlog.extras||[];
+  document.getElementById('nu-date').textContent=fmtDate(d);
+  const c=document.getElementById('meals-container');
+  c.innerHTML=MEALS.map(m=>{
+    const logged=nlog[m.id];
+    return `<div class="meal ${logged?'logged':''}">
+      <div class="mh">
+        <div><div class="mt_">${m.t}</div><div class="mtime">${m.time}</div></div>
+        <button class="btn btn-g btn-xs" onclick="qLogMeal('${m.id}')">${logged?'✓ Logged':'Quick Log'}</button>
+      </div>
+      <div class="mpills mb8">
+        <span class="mp pro">P: ${logged?.p||m.def.p}g</span>
+        <span class="mp carb">C: ${logged?.c||m.def.c}g</span>
+        <span class="mp fat">F: ${logged?.f||m.def.f}g</span>
+        <span class="mp">${logged?.k||m.def.k} kcal</span>
+      </div>
+      <details><summary style="font-size:.75rem;color:var(--muted);cursor:pointer">Items · Adjust macros ▸</summary>
+        <div style="margin-top:8px">
+          <ul style="list-style:none;margin-bottom:8px">${m.items.map(i=>`<li style="font-size:.75rem;color:var(--muted);padding:2px 0">· ${i}</li>`).join('')}</ul>
+          <div class="g3" style="gap:6px">
+            <div><label>Protein (g)</label><input type="number" id="mp-${m.id}" placeholder="${m.def.p}" value="${logged?.p||''}" min="0"></div>
+            <div><label>Carbs (g)</label><input type="number" id="mc-${m.id}" placeholder="${m.def.c}" value="${logged?.c||''}" min="0"></div>
+            <div><label>Fat (g)</label><input type="number" id="mf-${m.id}" placeholder="${m.def.f}" value="${logged?.f||''}" min="0"></div>
+          </div>
+          <div class="mt8"><label>kcal</label><input type="number" id="mk-${m.id}" placeholder="${m.def.k}" value="${logged?.k||''}" min="0"></div>
+        </div>
+      </details>
+    </div>`;}).join('');
+  renderExtras();
+  updNutrTotals();
+}
+
+function qLogMeal(mid){
+  const m=MEALS.find(x=>x.id===mid);
+  const d=today();
+  const nlog=DB.get('nutr_'+d)||{};
+  if(nlog[mid]){ delete nlog[mid]; } else {
+    nlog[mid]={
+      p:parseInt(document.getElementById('mp-'+mid)?.value)||m.def.p,
+      c:parseInt(document.getElementById('mc-'+mid)?.value)||m.def.c,
+      f:parseInt(document.getElementById('mf-'+mid)?.value)||m.def.f,
+      k:parseInt(document.getElementById('mk-'+mid)?.value)||m.def.k
+    };
+  }
+  DB.set('nutr_'+d,nlog);
+  renderMeals();
+  toast('Meal logged ✓');
+}
+
+function addExtra(){
+  const n=document.getElementById('ef-name').value;
+  if(!n){toast('Enter food name');return;}
+  const p=parseInt(document.getElementById('ef-p').value)||0;
+  const c=parseInt(document.getElementById('ef-c').value)||0;
+  const f=parseInt(document.getElementById('ef-f').value)||0;
+  const k=parseInt(document.getElementById('ef-k').value)||(p*4+c*4+f*9);
+  const type=document.getElementById('ef-type').value;
+  todayExtras.push({n,p,c,f,k,type});
+  ['ef-name','ef-p','ef-c','ef-f','ef-k'].forEach(id=>{document.getElementById(id).value='';});
+  renderExtras(); updNutrTotals();
+  toast('Food added ✓');
+}
+
+function removeExtra(i){
+  todayExtras.splice(i,1);
+  renderExtras(); updNutrTotals();
+}
+
+function renderExtras(){
+  const sec=document.getElementById('extras-section');
+  const c=document.getElementById('extras-list');
+  if(!todayExtras.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  c.innerHTML=todayExtras.map((e,i)=>`
+    <div class="meal">
+      <div class="mh"><div><div class="mt_">${e.n}</div><div class="mtime">${e.type}</div></div>
+        <button class="btn btn-g btn-xs" onclick="removeExtra(${i})">✕</button></div>
+      <div class="mpills"><span class="mp pro">P:${e.p}g</span><span class="mp carb">C:${e.c}g</span><span class="mp fat">F:${e.f}g</span><span class="mp">${e.k} kcal</span></div>
+    </div>`).join('');
+}
+
+function updTargets(){ updNutrTotals(); }
+
+function updNutrTotals(){
+  const d=today();
+  const nlog=DB.get('nutr_'+d)||{};
+  const type=document.getElementById('day-type')?.value||'train';
+  const t=TARGETS[type];
+  let tp=0,tc=0,tf=0,tk=0;
+  MEALS.forEach(m=>{ const l=nlog[m.id]; if(l){tp+=l.p||0;tc+=l.c||0;tf+=l.f||0;tk+=l.k||0;} });
+  todayExtras.forEach(e=>{tp+=e.p;tc+=e.c;tf+=e.f;tk+=e.k;});
+  const pp=Math.min(100,Math.round(tp/t.p*100));
+  const kp=Math.min(100,Math.round(tk/t.k*100));
+  document.getElementById('n-pro').textContent=tp;
+  document.getElementById('n-cal').textContent=tk;
+  document.getElementById('n-carb').textContent=tc;
+  document.getElementById('n-pp').textContent=pp+'%';
+  document.getElementById('n-cp').textContent=kp+'%';
+  const pb=document.getElementById('n-pb');
+  pb.style.width=pp+'%';
+  pb.className='pf '+(pp>=100?'pf-g':pp>=70?'pf-a':'pf-r');
+  document.getElementById('n-cb').style.width=kp+'%';
+}
+
+function saveNutrition(){
+  const d=today();
+  const nlog=DB.get('nutr_'+d)||{};
+  nlog.extras=todayExtras;
+  nlog.dayType=document.getElementById('day-type')?.value||'train';
+  DB.set('nutr_'+d,nlog);
+  const log=DB.get('daily_'+d)||{};
+  log.nutritionLogged=true;
+  DB.set('daily_'+d,log);
+  toast('Nutrition saved ✓');
+  refreshDash();
+}
+
+function togSupp(k){
+  const d=today();
+  const log=DB.get('daily_'+d)||{};
+  const s=log.supps||{};
+  s[k]=!s[k];
+  log.supps=s;
+  DB.set('daily_'+d,log);
+  document.getElementById('s-'+k)?.classList.toggle('on',s[k]);
+  toast(k.replace('-',' ')+' '+(s[k]?'✓':'—'));
+}
+
+function loadSuppState(){
+  const d=today();
+  const log=DB.get('daily_'+d)||{};
+  const s=log.supps||{};
+  ['creatine','vitd','mag','omega3'].forEach(k=>setTog('s-'+k,s[k]||false));
+}
+
+// ═══════════════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════════════
+let progTab='wt';
+
+function swProg(tab,btn){
+  progTab=tab;
+  ['wt','str','body','wci','exp'].forEach(t=>{
+    const el=document.getElementById('pt-'+t);
+    if(el) el.style.display=t===tab?'block':'none';
+  });
+  document.querySelectorAll('[onclick^="swProg"]').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(tab==='wt') renderWeightTab();
+  if(tab==='str') renderStrengthTab();
+  if(tab==='body') renderMeasTab();
+  if(tab==='wci') renderCITab();
+}
+
+function renderProgress(){
+  renderWeightTab();
+  loadRecentWos();
+}
+
+function renderWeightTab(){
+  const wlog=DB.get('weightLog')||[];
+  const tbody=document.getElementById('wt-tbody');
+  if(!wlog.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted)">No data yet</td></tr>';return;}
+  const enriched=wlog.map((e,i)=>{
+    const sl=wlog.slice(Math.max(0,i-6),i+1);
+    return {...e,avg:Math.round(sl.reduce((a,b)=>a+b.weight,0)/sl.length*10)/10};
+  });
+  tbody.innerHTML=enriched.slice(-14).reverse().map((e,i,arr)=>{
+    const prev=arr[i+1];
+    const ch=prev?(e.avg-prev.avg):0;
+    const cs=ch===0?'—':(ch>0?'+':'')+ch.toFixed(1)+' kg';
+    return `<tr><td>${fmtDate(e.date)}</td><td class="mono">${e.weight}</td><td class="mono">${e.avg}</td><td class="mono ${ch<0?'text-g':ch>0?'text-r_':'text-m'}">${cs}</td></tr>`;
+  }).join('');
+
+  const last20=wlog.slice(-20);
+  renderBarChart('pw-chart','pw-labs',last20.map(e=>e.weight),last20.map(e=>e.date.slice(5)));
+
+  const avg=enriched.slice(-7).reduce((a,b)=>a+b.avg,0)/Math.min(7,enriched.length);
+  const change=avg-78;
+  document.getElementById('pw-cur').textContent=avg.toFixed(1)+' kg';
+  document.getElementById('pw-chg').textContent=(change>0?'+':'')+change.toFixed(1)+' kg';
+  document.getElementById('pw-chg').className='sv '+(change<=0?'g':'r');
+
+  const wrate=enriched.length>=7?enriched[enriched.length-1].avg-enriched[enriched.length-8]?.avg:null;
+  document.getElementById('pw-wk').textContent=wrate!==null?(wrate>0?'+':'')+wrate?.toFixed(2)+' kg/wk':'—';
+
+  const dec=document.getElementById('wt-dec');
+  if(!wrate){ dec.innerHTML='<p class="text-sm text-m">Log 7+ days for recommendations.</p>';return; }
+  if(Math.abs(wrate)<0.1) dec.innerHTML='<div class="alert aa">⚠️ Weight stalled. Remove 50g rice from rest day dinner. Confirm deficit is tracked accurately including cooking oils and weekend meals.</div>';
+  else if(wrate<-0.7) dec.innerHTML='<div class="alert ar">🚨 Losing >0.7kg/week — too aggressive. Add 200 kcal to training days (60g rice to lunch). Confirm protein at 180g daily.</div>';
+  else if(wrate>=-0.5&&wrate<=-0.2) dec.innerHTML='<div class="alert ag">✓ On track. −0.2 to −0.5 kg/week — optimal recomp rate. Maintain all protocols.</div>';
+  else dec.innerHTML='<div class="alert ab">ℹ️ Monitor for 2 more weeks before adjusting.</div>';
+}
+
+function renderStrengthTab(){
+  const wolog=DB.get('workoutLog')||[];
+  const lifts=['bench','dl','sq','ohp'];
+  const names={bench:'Bench Press',dl:'Deadlift',sq:'Squat',ohp:'OHP'};
+  const strData={};
+  wolog.forEach(wo=>{
+    if(!wo.sets) return;
+    Object.entries(wo.sets).forEach(([exId,sets])=>{
+      if(!lifts.includes(exId)) return;
+      sets.forEach(s=>{ if(s?.kg){ if(!strData[exId]) strData[exId]=[]; strData[exId].push({date:wo.date,kg:s.kg,reps:s.reps}); }});
+    });
+  });
+  const c=document.getElementById('lift-cards');
+  c.innerHTML=lifts.map(id=>{
+    const data=strData[id]||[];
+    const pr=data.reduce((best,s)=>s.kg>(best?.kg||0)?s:best,null);
+    return `<div class="card mb12">
+      <div class="row sb mb8"><h3>${names[id]}</h3>${pr?`<span class="badge bgo">PR: ${pr.kg}kg×${pr.reps}</span>`:'<span class="badge bb">No data</span>'}</div>
+      ${data.length?`<div class="bars" style="height:60px">${miniChart(data.slice(-8).map(d=>d.kg))}</div>`:'<p class="text-xs text-m">Log sessions to see progression</p>'}
+    </div>`;}).join('');
+
+  const allSets=[];
+  wolog.forEach(wo=>{ if(!wo.sets) return; Object.entries(wo.sets).forEach(([exId,sets])=>{ sets.forEach(s=>{ if(s?.kg) allSets.push({date:wo.date,ex:exId,kg:s.kg,reps:s.reps,rpe:s.rpe}); }); }); });
+  const tb=document.getElementById('str-tbody');
+  tb.innerHTML=allSets.slice(-15).reverse().map(s=>`<tr><td>${fmtDate(s.date)}</td><td>${s.ex}</td><td class="mono">${s.kg}kg×${s.reps}</td><td class="mono">${s.rpe||'—'}</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--muted)">No workouts yet</td></tr>';
+}
+
+function miniChart(vals){
+  if(!vals.length) return '';
+  const max=Math.max(...vals),min=Math.min(...vals,max-1);
+  return vals.map(v=>`<div style="flex:1;background:var(--accent2);opacity:.7;border-radius:3px 3px 0 0;height:${Math.max(8,((v-min)/(max-min||1))*100)}%;min-height:4px"></div>`).join('');
+}
+
+function renderMeasTab(){
+  const md=DB.get('measurements')||{};
+  const sites=['waist','chest','hips','armf','armr','thigh','calf','neck'];
+  const names=['Waist','Chest','Hips','R.Arm flex','R.Arm relax','R.Thigh','R.Calf','Neck'];
+  const tb=document.getElementById('meas-tbody');
+  tb.innerHTML=sites.map((s,i)=>{
+    const vals=[1,5,9,12].map(w=>md[w]?.[s]);
+    const first=vals.find(v=>v),last=[...vals].filter(v=>v).pop();
+    const ch=first&&last&&first!==last?(last-first>0?'+':'')+((last-first).toFixed(1))+'cm':'—';
+    return `<tr><td class="fw6">${names[i]}</td>${vals.map(v=>`<td class="mono">${v||'—'}</td>`).join('')}<td class="mono ${ch.startsWith('-')?'text-g':ch.startsWith('+')?'text-r_':'text-m'}">${ch}</td></tr>`;}).join('');
+}
+
+function saveMeas(){
+  const w=parseInt(document.getElementById('mw-wk').value);
+  const fields=[['waist','m-waist'],['chest','m-chest'],['hips','m-hips'],['armf','m-armf'],['armr','m-armr'],['thigh','m-thigh'],['calf','m-calf'],['neck','m-neck']];
+  const md=DB.get('measurements')||{};
+  md[w]=md[w]||{};
+  fields.forEach(([k,id])=>{ const v=parseFloat(document.getElementById(id)?.value); if(v) md[w][k]=v; });
+  DB.set('measurements',md);
+  closeMod('mod-meas');
+  toast('Measurements saved ✓');
+  renderMeasTab();
+}
+
+// ═══════════════════════════════════════════════════
+// WEEKLY CHECK-IN
+// ═══════════════════════════════════════════════════
+let ciWk=1;
+let ciScores={};
+
+function renderCITab(){
+  document.getElementById('ci-wk-lbl').textContent='Week '+ciWk;
+  const ci=DB.get('ci_'+ciWk)||{};
+  ciScores=ci.scores||{};
+  const c=document.getElementById('ci-scores');
+  c.innerHTML='<div class="stitle">Subjective Scores</div>'+SUBJ.map(f=>`
+    <div style="margin-bottom:12px">
+      <div class="row sb mb4"><span class="fw6 text-sm">${f.l}</span><span class="mono text-sm text-b" id="ci-sd-${f.k}">${ciScores[f.k]||'—'}/10</span></div>
+      <div class="sgrid">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<div class="sb-s s${n} ${ciScores[f.k]==n?'act':''}" onclick="setCIS('${f.k}',${n},this)">${n}</div>`).join('')}</div>
+    </div>`).join('');
+  const lifts=['Bench Press','Deadlift','Squat','OHP'];
+  const lf=document.getElementById('ci-lifts');
+  lf.innerHTML=lifts.map(l=>`<div><label>${l}</label><input type="text" id="ci-${l.replace(/ /g,'_')}" placeholder="e.g. 80kg × 8 @ RPE 7" value="${ci.lifts?.[l]||''}"></div>`).join('');
+  const total=SUBJ.filter(f=>f.k!=='hunger').reduce((a,f)=>a+(ciScores[f.k]||0),0);
+  document.getElementById('ci-wps').textContent=(total||'—')+' / 50';
+  if(ci.summary) document.getElementById('ci-sum').value=ci.summary;
+}
+
+function setCIS(k,v,el){
+  ciScores[k]=v;
+  document.getElementById('ci-sd-'+k).textContent=v+'/10';
+  el.closest('.sgrid').querySelectorAll('.sb-s').forEach(b=>b.classList.remove('act'));
+  el.classList.add('act');
+  const total=SUBJ.filter(f=>f.k!=='hunger').reduce((a,f)=>a+(ciScores[f.k]||0),0);
+  document.getElementById('ci-wps').textContent=total+' / 50';
+}
+
+function saveCI(){
+  const lifts=['Bench Press','Deadlift','Squat','OHP'];
+  const ld={};
+  lifts.forEach(l=>{ const v=document.getElementById('ci-'+l.replace(/ /g,'_'))?.value; if(v) ld[l]=v; });
+  DB.set('ci_'+ciWk,{week:ciWk,date:today(),scores:ciScores,lifts:ld,summary:document.getElementById('ci-sum').value});
+  toast('Check-in saved ✓');
+}
+
+function chgWk(d){ ciWk=Math.max(1,Math.min(12,ciWk+d)); ciScores={}; renderCITab(); }
+
+// ═══════════════════════════════════════════════════
+// CHART HELPER
+// ═══════════════════════════════════════════════════
+function renderBarChart(cid,lid,vals,labs){
+  const c=document.getElementById(cid); const l=document.getElementById(lid);
+  if(!vals.length||!c) return;
+  const max=Math.max(...vals),min=Math.min(...vals,max-0.5);
+  c.innerHTML=vals.map((v,i)=>`<div class="bar" style="height:${Math.max(6,((v-min)/(max-min||1))*100)}%;opacity:${i===vals.length-1?1:0.6};${i===vals.length-1?'background:var(--accent)':''}" title="${v} kg"></div>`).join('');
+  if(l&&labs) l.innerHTML=labs.map(lb=>`<span>${lb}</span>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+function refreshDash(){
+  const d=today();
+  const log=DB.get('daily_'+d)||{};
+  const nlog=DB.get('nutr_'+d)||{};
+  const cfg=getCfg();
+  const now=new Date();
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  document.getElementById('dash-date').textContent=`${days[now.getDay()]}, ${now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`;
+  const wk=getWk();
+  document.getElementById('dash-week').textContent='W'+wk;
+  document.getElementById('dash-phase').textContent=wk<=4?'Accumulation':wk<=8?'Hypertrophy':'Intensification';
+
+  const wlog=DB.get('weightLog')||[];
+  const r7=wlog.slice(-7);
+  const avg7=r7.length?(r7.reduce((a,b)=>a+b.weight,0)/r7.length).toFixed(1):'—';
+  const wEl=document.getElementById('d-weight');
+  wEl.textContent=(log.weight||avg7)+' kg';
+
+  const hrv=log.hrv;
+  const hEl=document.getElementById('d-hrv');
+  if(hrv){ hEl.textContent=hrv+' ms'; hEl.className='sv '+(hrv>50?'g':hrv>40?'a':'r'); }
+  const rEl=document.getElementById('d-rec');
+  if(log.recovery){ rEl.textContent=log.recovery+'%'; rEl.className='sv '+(log.recovery>=67?'g':log.recovery>=34?'a':'r'); }
+
+  updateHRVCard(hrv);
+
+  setTog('tg-w',!!log.weight);
+  setTog('tg-wo',!!(log.workedOut||log.pickleball));
+  setTog('tg-wh',!!log.hrv);
+
+  let tp=0,tk=0;
+  MEALS.forEach(m=>{ const l=nlog[m.id]; if(l){tp+=l.p||0;tk+=l.k||0;} });
+  (nlog.extras||[]).forEach(e=>{tp+=e.p;tk+=e.k;});
+  setTog('tg-nu',tp>=cfg.protein*0.9);
+  document.getElementById('tw-nu').textContent=`Protein: ${tp} / ${cfg.protein}g`;
+  document.getElementById('d-pro').textContent=`${tp} / ${cfg.protein}g`;
+  document.getElementById('d-cal').textContent=`${tk} / ${cfg.calories} kcal`;
+  const pp=Math.min(100,Math.round(tp/cfg.protein*100));
+  const kp=Math.min(100,Math.round(tk/cfg.calories*100));
+  const pb=document.getElementById('d-pro-bar');
+  pb.style.width=pp+'%';
+  pb.className='pf '+(pp>=100?'pf-g':pp>=70?'pf-a':'pf-r');
+  document.getElementById('d-cal-bar').style.width=kp+'%';
+  document.getElementById('tw-w').textContent=log.weight?`Logged: ${log.weight} kg`:'Tap to log';
+  document.getElementById('tw-wo').textContent=(log.workedOut||log.pickleball)?(log.workedOut?`Done: ${log.session}`:'🏓 Pickleball done'):'Tap to log';
+  document.getElementById('tw-wh').textContent=log.hrv?`HRV: ${log.hrv}ms · Rec: ${log.recovery||'—'}%`:'Log HRV, sleep, scores';
+
+  if(wlog.length>1) renderBarChart('d-chart','d-chart-labs',wlog.slice(-7).map(e=>e.weight),wlog.slice(-7).map(e=>e.date.slice(5)));
+  document.getElementById('d-7avg').textContent=avg7+' kg';
+  renderStreak();
+  updateSyncBar(getSheetUrl()?'ok':'off');
+}
+
+function updateHRVCard(hrv){
+  const card=document.getElementById('hrv-card');
+  const badge=document.getElementById('hrv-badge');
+  const txt=document.getElementById('hrv-txt');
+  if(!hrv){ card.className='card mb16 al'; badge.className='badge bb'; badge.textContent='Log HRV first'; txt.textContent='Enter Whoop HRV in Daily Log for today\'s recommendation.'; return; }
+  if(hrv>50){ card.className='card mb16 gl'; badge.className='badge bg'; badge.textContent='🟢 Green — Full Load'; txt.textContent='Train as programmed. Attempt load progression if due. Saturday: run Upper session. Full pre-workout dose.'; }
+  else if(hrv>=40){ card.className='card mb16 ol'; badge.className='badge ba'; badge.textContent='🟡 Amber — Modified'; txt.textContent='Cap RPE at 7. Skip last isolation exercise. Add 30s rest. Saturday: Zone 2 + prehab only. Half-dose pre-workout.'; }
+  else { card.className='card mb16 rl'; badge.className='badge br'; badge.textContent='🔴 Red — Survival Mode'; txt.textContent='All loads −20%. Remove last isolation. RPE cap 6. No stimulant. Target strain 10–11. Bed by 10:30 PM, 400mg magnesium tonight.'; }
+}
+
+function renderStreak(){
+  const c=document.getElementById('streak');
+  const days=['M','T','W','T','F','S','S'];
+  let html='',ct=0;
+  for(let i=6;i>=0;i--){
+    const dt=new Date(); dt.setDate(dt.getDate()-i);
+    const key=dt.toISOString().split('T')[0];
+    const l=DB.get('daily_'+key);
+    const logged=l&&(l.weight||l.hrv);
+    if(logged) ct++;
+    const cls=i===0?'sd-t':logged?'sd-d':i>0?'sd-s':'sd-f';
+    html+=`<div class="sd ${cls}">${days[dt.getDay()]}</div>`;
+  }
+  c.innerHTML=html;
+  document.getElementById('streak-ct').textContent=ct+'/7';
+}
+
+function openWeightModal(){ showMod('mod-weight'); }
+
+function saveQWeight(){
+  const w=parseFloat(document.getElementById('mw-val').value);
+  if(!w){ toast('Enter your weight'); return; }
+  const d=today();
+  const log=DB.get('daily_'+d)||{};
+  log.weight=w; DB.set('daily_'+d,log);
+  addWeightEntry(d,w);
+  closeMod('mod-weight');
+  toast(`Weight: ${w} kg saved ✓`);
+  refreshDash();
+}
+
+// ═══════════════════════════════════════════════════
+// GUIDE CONTENT
+// ═══════════════════════════════════════════════════
+const GUIDE = {
+  prog:`
+    <div class="card mb12 gol"><h3>12-Week Block</h3><div class="g3 mt8"><div class="stat"><div class="sv" style="font-size:.9rem;color:var(--green)">Wks 1–4</div><div class="sl">Accumulation</div></div><div class="stat"><div class="sv" style="font-size:.9rem;color:var(--accent)">Wks 5–8</div><div class="sl">Hypertrophy</div></div><div class="stat"><div class="sv" style="font-size:.9rem;color:var(--purple)">Wks 9–12</div><div class="sl">Intensification</div></div></div></div>
+    <div class="gblock" style="border-left-color:var(--amber)"><h4>Weekly Split (Whoop-Optimised)</h4><ul><li><strong>Mon</strong> — Prehab + 10 min walk (lowest recovery day)</li><li><strong>Tue</strong> — Push A: Bench, Incline, DB OHP, Laterals, Triceps</li><li><strong>Wed</strong> — Pull A: Deadlift, Rows, Pull-ups, Biceps, Face Pulls</li><li><strong>Thu</strong> — Rest / Active recovery walk</li><li><strong>Fri</strong> — Legs A: Squat, RDL, Lunges, Leg Curl, Core, Calves</li><li><strong>Sat</strong> — Flex: Upper if Whoop ≥67%, else rest + prehab</li><li><strong>Sun</strong> — Full rest + Sunday check-in</li><li>🏓 <strong>Pickleball:</strong> Tue/Wed/Fri evenings — log under Workout tab</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--green)"><h4>Load Progression Rules</h4><ul><li>Upper: +2.5 kg when top of rep range hit at RPE ≤8</li><li>Lower: +5 kg when conditions met</li><li>HRV &lt;40ms: all loads −20%, skip last isolation</li><li>Two consecutive red days: skip training, prehab + walk only</li><li>Log RPE every set — makes silent progress visible</li></ul></div>`,
+  prehab:`
+    <div class="alert ab mb12">20 min · 3×/week (Mon/Wed/Fri) · Non-fatiguing, targeted, evidence-based</div>
+    <div class="gblock" style="border-left-color:var(--red)"><h4>🔴 Shoulders — 5 min</h4><ul><li><strong>Band External Rotation:</strong> 3×15 each — elbow at 90°, rotate outward only</li><li><strong>Wall Angel:</strong> 2×10 — all four contact points on wall, arms slide overhead</li><li><strong>Face Pull:</strong> 3×20 — elbows high, pull to nose, thumbs back, 1s hold</li><li><strong>Scapular Push-Up:</strong> 2×15 — arms locked, only shoulder blades move</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--amber)"><h4>🟡 Hips — 5 min</h4><ul><li><strong>90/90 Hip Stretch:</strong> 2×60s each — internal + external rotation</li><li><strong>Banded Clamshell:</strong> 3×15 each — no pelvis rotation, feel glute med</li><li><strong>Hip CARs:</strong> 2×10 each — full circle, pelvis fixed</li><li><strong>Single-Leg Glute Bridge:</strong> 3×12 each — 2s hold, pelvis level</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--green)"><h4>🟢 Knees — 4 min</h4><ul><li><strong>Ankle Wall Drill:</strong> 3×10 each — 10cm from wall, heel stays down</li><li><strong>Sissy Squat:</strong> 3×10 — controlled, stop before pain onset</li><li><strong>TKE (banded):</strong> 3×15 each — VMO focus, knee over second toe</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--accent)"><h4>🔵 Lower Back — 3 min</h4><ul><li><strong>Dead Bug:</strong> 3×8 each — lower back pressed to floor throughout</li><li><strong>Bird Dog:</strong> 3×8 each — 3s hold, no hip rotation</li><li><strong>McGill Curl-Up:</strong> 3×6 — 10s hold, no lumbar flexion</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--purple)"><h4>🟣 Elbows — 3 min</h4><ul><li><strong>Wrist Flexor Stretch:</strong> 2×30s + 15 rotations each arm</li><li><strong>Reverse Curl (light):</strong> 2×15 — 3s eccentric</li><li><strong>Band Tricep Pushdown:</strong> 2×20 — tendon conditioning, light only</li></ul></div>`,
+  nutr:`
+    <div class="card mb12 gl"><h3>Daily Targets — 78 kg</h3><div class="g3 mt8"><div class="stat"><div class="sv g">180g</div><div class="sl">Protein</div></div><div class="stat"><div class="sv b">2460</div><div class="sl">Train kcal</div></div><div class="stat"><div class="sv a">2050</div><div class="sl">Rest kcal</div></div></div></div>
+    <div class="gblock" style="border-left-color:var(--green)"><h4>Meal 1 — Breakfast (7:30–8 AM) · 660 kcal · 52g P</h4><ul><li>1 scoop whey (30g) + 220g Greek yogurt</li><li>60g oats + 10g chia + 12g almonds + 100ml oat milk</li><li>D3+K2 5000 IU with breakfast</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--green)"><h4>Meal 2 — Mid-Morning (11 AM) · 315 kcal · 37g P</h4><ul><li>200g low-fat cottage cheese + 1 apple or banana</li><li>1 omega-3 capsule</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--green)"><h4>Meal 3 — Lunch (1:30–2 PM) · 730 kcal train · 58g P</h4><ul><li>250g chicken breast + 260g rice (training) / 170g (rest)</li><li>150g vegetables + 10ml olive oil + 1 banana (training only)</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--amber)"><h4>Pre-Workout (60–75 min before)</h4><ul><li>Pre-workout supplement (before 5:15 PM only)</li><li>1 large banana or 40g rice cakes</li><li>Red day: replace stimulant with black coffee only</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--green)"><h4>Meal 4 — Dinner (by 8 PM) · 720 kcal train · 58g P</h4><ul><li>250g chicken + 230g rice (training) / 120g (rest) + 200g veg</li><li>15ml olive oil · 5g creatine · 2 omega-3 capsules</li></ul></div>
+    <div class="card rl mt8"><h4 style="color:var(--red)">8 PM Rule</h4><p class="text-xs text-m mt4">Dinner finished by 8 PM. Late meals suppress deep sleep. Your Whoop data confirms this drives low Friday/Saturday recovery.</p></div>`,
+  hrv:`
+    <div class="card mb12"><h3>Your HRV Zones</h3><p class="text-xs text-m mt4">Based on 90-day data: avg 47ms · range 35–59ms · decisions are relative to YOUR baseline</p></div>
+    <div class="gblock" style="border-left-color:var(--green)"><h4>🟢 Green: HRV &gt;50ms</h4><ul><li>Train as programmed at full intensity</li><li>Attempt load progression if due</li><li>Saturday: run Upper session in full</li><li>Pre-workout: full dose</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--amber)"><h4>🟡 Amber: HRV 40–50ms</h4><ul><li>Cap all sets at RPE 7</li><li>No load progression today</li><li>Skip last isolation exercise</li><li>+30s to all rest periods</li><li>Saturday: Zone 2 cardio + prehab only</li><li>Half-dose pre-workout</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--red)"><h4>🔴 Red: HRV &lt;40ms</h4><ul><li>All loads −20%</li><li>Remove last isolation exercise</li><li>RPE cap 6 everything</li><li>Target strain 10–11 max</li><li>No stimulant pre-workout</li><li>Two consecutive red days = skip training entirely</li><li>Tonight: bed by 10:30 PM, 400mg magnesium, phone off</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--purple)"><h4>Sleep Protocol</h4><ul><li>8 PM: Dinner finished</li><li>9:30 PM: Job search ends for the day</li><li>10 PM: Magnesium 300–400mg taken</li><li>10:30 PM: Screens dimmed, blue light filter on</li><li>10:45 PM: 3-item journal (done/tomorrow/one worry)</li><li>11 PM: Room cool, phone DND</li><li>11:15 PM: Target sleep onset</li><li>7–7:30 AM: Wake — consistent even on weekends</li></ul></div>`,
+  dec:`
+    <div class="alert aa mb12">Rule: Fix sleep → then protein → then calories → then training. Always in that order.</div>
+    <div class="gblock" style="border-left-color:var(--red)"><h4>⚖️ Weight not moved for 2 weeks</h4><p>Confirm deficit is real (tracking oils, sauces, weekend extras?)</p><p class="mt4"><strong>Action:</strong> Remove 50g rice from rest day dinner → week 2 still no movement: remove from lunch → week 3: add 30min Zone 2 walk on rest days. Never &lt;1800 kcal. Protein stays 180g.</p></div>
+    <div class="gblock" style="border-left-color:var(--red)"><h4>📉 Losing &gt;0.7 kg/week for 2 weeks</h4><p><strong>Action:</strong> Add 200 kcal to training days (60g rice to lunch). Confirm protein at 180g. Re-measure arms in 2 weeks — if dropping, muscle loss is happening.</p></div>
+    <div class="gblock" style="border-left-color:var(--green)"><h4>📐 Measurements up, weight stable</h4><p><strong>Perfect recomp signal. Do nothing different.</strong> The scale lies during recomp. Trust the tape and photos. Maintain all protocols exactly.</p></div>
+    <div class="gblock" style="border-left-color:var(--amber)"><h4>💪 Strength dropping on green days (2 weeks)</h4><p><strong>Action:</strong> 5-day mini-deload (all loads −25%, no isolation). If no recovery: add 150 kcal to training days. If HRV &lt;42ms for 10+ days: address the stressor directly.</p></div>
+    <div class="gblock" style="border-left-color:var(--red)"><h4>📡 HRV drops &gt;8ms week-over-week</h4><p><strong>Action:</strong> Volume −20% next week. Skip last isolation per session. Move bedtime 30 min earlier for 7 days. Identify and address the primary stressor.</p></div>`,
+  inj:`
+    <div class="alert ar mb12">Pain guide: 0–2 train normal · 3–4 modify + load −20% · 5–6 switch to pain-free alternative · 7+ stop immediately</div>
+    <div class="gblock" style="border-left-color:var(--amber)"><h4>Anterior Knee Pain</h4><ul><li>Modify: Box squat or leg press high foot</li><li>Load reduction: 25–40%</li><li>Add: Sissy squat prehab + ankle wall drills daily</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--red)"><h4>Lower Back Pain</h4><ul><li>Modify: Trap bar DL → RDL → Leg press</li><li>Rows: Seated cable row (no spinal loading)</li><li>Red flag: Pain radiating into leg = stop, seek assessment</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--amber)"><h4>Shoulder Pain (Bench/OHP)</h4><ul><li>Bench: Close-grip → Floor press → Cable fly</li><li>OHP: Landmine press → DB press → Cable press</li><li>Add face pulls daily (not just 3×/week)</li></ul></div>
+    <div class="gblock" style="border-left-color:var(--red)"><h4>🚨 Stop Immediately If:</h4><ul><li>Sharp sudden pain during a lift</li><li>Pop, snap, or crack with pain</li><li>Joint swelling within 1–2 hours</li><li>Numbness or tingling down arm or leg</li><li>Loss of grip strength suddenly</li><li>Pain 7+ during or after a set</li></ul></div>`,
+  setup:`
+    <div class="card mb12 al"><h3>Google Sheets Setup</h3><p class="text-sm text-m mt4">One-time setup (~10 minutes). All your data will sync automatically to your personal Google Sheet after this.</p></div>
+    <div class="setup-step"><div class="step-num">STEP 1</div><h4>Create Your Google Sheet</h4><p>Go to <strong>sheets.new</strong> in your browser. Name it "Durga Performance Tracker". Create these sheets (tabs at the bottom): <code>DailyLog · WorkoutLog · NutritionLog · WeightLog · Measurements · WeeklyCheckIn</code></p></div>
+    <div class="setup-step"><div class="step-num">STEP 2</div><h4>Open Apps Script</h4><p>In your Sheet, click <strong>Extensions → Apps Script</strong>. Delete all the existing code. Paste in the Apps Script code below (copy the entire block).</p><code>/* Copy the Apps Script from the next step */</code></div>
+    <div class="setup-step"><div class="step-num">STEP 3</div><h4>Paste This Apps Script Code</h4>
+    <p style="margin-bottom:6px">Copy this entire script and paste it into Apps Script:</p>
+    <textarea id="apps-script-code" readonly style="font-family:var(--mono);font-size:.65rem;min-height:180px;background:var(--bg2);border-color:var(--border2);color:var(--muted);line-height:1.5" onclick="this.select()">function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var action = data.action;
+    
+    if (action === 'batchWrite' || action === 'fullSync') {
+      var items = action === 'batchWrite' ? data.data : Object.entries(data.data).map(([k,v])=>({key:k,val:v}));
+      items.forEach(function(item) {
+        var key = item.key;
+        var val = item.val;
+        var sheetName = 'DailyLog';
+        if (key.startsWith('workoutLog')) sheetName = 'WorkoutLog';
+        else if (key.startsWith('nutr_')) sheetName = 'NutritionLog';
+        else if (key === 'weightLog') sheetName = 'WeightLog';
+        else if (key === 'measurements') sheetName = 'Measurements';
+        else if (key.startsWith('ci_')) sheetName = 'WeeklyCheckIn';
+        
+        var sheet = ss.getSheetByName(sheetName);
+        if (!sheet) sheet = ss.insertSheet(sheetName);
+        
+        var timestamp = new Date().toISOString();
+        var jsonVal = JSON.stringify(val);
+        
+        var data2 = sheet.getDataRange().getValues();
+        var rowIdx = -1;
+        for (var i = 1; i < data2.length; i++) {
+          if (data2[i][0] === key) { rowIdx = i + 1; break; }
+        }
+        
+        if (sheet.getLastRow() === 0) {
+          sheet.appendRow(['Key', 'Value', 'LastUpdated']);
+        }
+        
+        if (rowIdx > 0) {
+          sheet.getRange(rowIdx, 2).setValue(jsonVal);
+          sheet.getRange(rowIdx, 3).setValue(timestamp);
+        } else {
+          sheet.appendRow([key, jsonVal, timestamp]);
+        }
+      });
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({status:'ok'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status:'error',msg:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</textarea>
+    <button class="btn btn-g btn-xs mt8" onclick="copyAppsScript()">📋 Copy Script</button>
+    </div>
+    <div class="setup-step"><div class="step-num">STEP 4</div><h4>Deploy as Web App</h4><p>In Apps Script: click <strong>Deploy → New deployment</strong>. Type: <strong>Web app</strong>. Execute as: <strong>Me</strong>. Who has access: <strong>Anyone</strong>. Click Deploy. Copy the Web App URL.</p></div>
+    <div class="setup-step"><div class="step-num">STEP 5</div><h4>Paste Your Web App URL Here</h4>
+    <div style="margin-top:8px"><label>Your Apps Script Web App URL</label><input type="url" id="sheet-url-input" placeholder="https://script.google.com/macros/s/..." value="${DB.get('sheet_url')||''}"></div>
+    <button class="btn btn-s btn-blk mt8" onclick="saveSheetUrl()">Save URL &amp; Connect</button>
+    </div>
+    <div class="setup-step"><div class="step-num">STEP 6</div><h4>Test the Connection</h4><p>After saving your URL, tap the Sync button in the top bar. If you see "Synced to Google Sheets ✓" — you're connected. Your data will now sync automatically every time you log anything.</p></div>
+    <div class="card" style="background:var(--bg3);border:1px solid rgba(240,192,64,.2);margin-top:8px"><h4 style="color:var(--gold)">⚠️ Important: Authorize the Script</h4><p class="text-xs text-m mt4">The first time you deploy, Google will ask you to authorize the script. Click "Review permissions" → sign in with your Google account → click "Allow". This is required for the script to write to your Sheet.</p></div>`
+};
+
+function swGuide(tab, btn){
+  const gc=document.getElementById('guide-content');
+  gc.innerHTML=GUIDE[tab]||'<p class="text-m">Coming soon.</p>';
+  document.querySelectorAll('#gtabs .tp').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  else document.querySelector('#gtabs .tp')?.classList.add('on');
+}
+
+function saveSheetUrl(){
+  const url=document.getElementById('sheet-url-input')?.value?.trim();
+  if(!url||!url.includes('script.google.com')){ toast('Enter a valid Apps Script URL'); return; }
+  DB.set('sheet_url',url);
+  localStorage.setItem('dtrk_sheet_url',JSON.stringify(url));
+  toast('Sheet URL saved ✓ — tap Sync to test');
+  updateSyncBar('pending');
+  manualSync();
+}
+
+function copyAppsScript(){
+  const code=document.getElementById('apps-script-code');
+  if(code){ code.select(); navigator.clipboard?.writeText(code.value)||document.execCommand('copy'); toast('Apps Script copied ✓ — paste into Apps Script editor'); }
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════
+function expJSON(){
+  const blob=new Blob([JSON.stringify(DB.all(),null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='durga-tracker-'+today()+'.json';
+  a.click();
+  toast('JSON downloaded ✓');
+}
+
+function copyCSV(){
+  const wlog=DB.get('weightLog')||[];
+  const rows=[['Date','Weight (kg)','7d Avg']];
+  wlog.forEach((e,i)=>{ const sl=wlog.slice(Math.max(0,i-6),i+1); const avg=(sl.reduce((a,b)=>a+b.weight,0)/sl.length).toFixed(1); rows.push([e.date,e.weight,avg]); });
+  navigator.clipboard?.writeText(rows.map(r=>r.join('\t')).join('\n'));
+  toast('Copied — paste into Google Sheets ✓');
+}
+
+function expWoCSV(){
+  const wolog=DB.get('workoutLog')||[];
+  const rows=['Date,Session,Exercise,Set,kg,Reps,RPE'];
+  wolog.forEach(wo=>{
+    if(wo.type==='pickleball'){ rows.push(`${wo.date},Pickleball,—,—,—,${wo.duration}min,—`); return; }
+    if(wo.sets) Object.entries(wo.sets).forEach(([ex,sets])=>{ sets.forEach((s,i)=>{ if(s?.kg) rows.push(`${wo.date},${wo.sessionName},${ex},${i+1},${s.kg||''},${s.reps||''},${s.rpe||''}`); }); });
+  });
+  dlCSV(rows,'workouts-'+today()+'.csv');
+}
+
+function expNutrCSV(){
+  const rows=['Date,Meal,Protein,Carbs,Fat,kcal'];
+  for(let i=0;i<84;i++){
+    const dt=new Date('2026-03-28'); dt.setDate(dt.getDate()+i);
+    const key=dt.toISOString().split('T')[0];
+    const nlog=DB.get('nutr_'+key);
+    if(!nlog) continue;
+    MEALS.forEach(m=>{ const l=nlog[m.id]; if(l) rows.push(`${key},${m.t},${l.p||0},${l.c||0},${l.f||0},${l.k||0}`); });
+  }
+  dlCSV(rows,'nutrition-'+today()+'.csv');
+}
+
+function dlCSV(rows,name){
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name; a.click();
+}
+
+function resetAll(){
+  if(!confirm('Delete ALL data permanently? Cannot be undone.')) return;
+  Object.keys(localStorage).filter(k=>k.startsWith('dtrk_')).forEach(k=>localStorage.removeItem(k));
+  toast('All data deleted.');
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+function init(){
+  checkPinOnLoad();
+  refreshDash();
+  renderSubjScores();
+  renderMeals();
+  renderSession('push-a');
+  renderScoreGrid('sess-rpe','sess_rpe');
+  swGuide('prog', document.querySelector('#gtabs .tp'));
+  loadRecentWos();
+  updateSyncBar(getSheetUrl()?'ok':'off');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+// PWA install prompt
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  const b=document.createElement('button');
+  b.className='btn btn-g btn-sm';
+  b.style.cssText='position:fixed;top:8px;right:8px;z-index:400;font-size:.7rem';
+  b.textContent='📱 Install App';
+  b.onclick=()=>{e.prompt();b.remove();};
+  document.body.appendChild(b);
+});
+</script>
+</body>
+</html>
